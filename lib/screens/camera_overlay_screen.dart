@@ -419,33 +419,34 @@ class CameraOverlayScreen extends StatelessWidget {
 
             // Barra de instruções deslizante
             Obx(
-              () => AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                bottom: controller.isMoveBarExpanded.value ? 50 : -30,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 40,
-                  decoration: const BoxDecoration(color: Colors.white),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildToolbarButton(
-                        label: "Imagem",
-                        isActive: controller.isImageMoveButtonActive.value,
-                        onPressed: () {
-                          controller.toggleMoveImageButton();
-                        },
-                      ),
-                      _buildToolbarButton(
-                        label: "Câmera",
-                        isActive: controller.isCameraMoveButtonActive.value,
-                        onPressed: () {
-                          controller.toggleMoveCameraButton();
-                        },
-                      ),
-                    ],
+              () => Visibility(
+                visible: controller.isMoveBarExpanded.value,
+                child: Positioned(
+                  bottom: controller.isMoveBarExpanded.value ? 50 : -30,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 40,
+                    decoration: const BoxDecoration(color: Colors.white),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildToolbarButton(
+                          label: "Imagem",
+                          isActive: controller.isImageMoveButtonActive.value,
+                          onPressed: () {
+                            controller.toggleMoveImageButton();
+                          },
+                        ),
+                        _buildToolbarButton(
+                          label: "Câmera",
+                          isActive: controller.isCameraMoveButtonActive.value,
+                          onPressed: () {
+                            controller.toggleMoveCameraButton();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -453,45 +454,46 @@ class CameraOverlayScreen extends StatelessWidget {
 
             // Barra de opacidade deslizante
             Obx(
-              () => AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                bottom: controller.isOpacityBarExpanded.value ? 50 : -30,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 40,
-                  decoration: const BoxDecoration(color: Colors.white),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Slider(
-                            value: controller.imageOpacity.value,
-                            min: 0.0,
-                            max: 1.0,
+              () => Visibility(
+                visible: controller.isOpacityBarExpanded.value,
+                child: Positioned(
+                  bottom: controller.isOpacityBarExpanded.value ? 50 : -30,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 40,
+                    decoration: const BoxDecoration(color: Colors.white),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Slider(
+                              value: controller.imageOpacity.value,
+                              min: 0.0,
+                              max: 1.0,
+                              activeColor: Colors.blue,
+                              inactiveColor: Colors.grey,
+                              onChanged: controller.updateImageOpacity,
+                            ),
+                          ),
+                          Text(
+                            '${(controller.imageOpacity.value * 100).round()}%',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: controller.isOpacitySwitchEnabled.value,
+                            onChanged: (value) {
+                              controller.toggleOverlayVisibility(value);
+                              controller.isOpacitySwitchEnabled.value = value;
+                            },
                             activeColor: Colors.blue,
-                            inactiveColor: Colors.grey,
-                            onChanged: controller.updateImageOpacity,
                           ),
-                        ),
-                        Text(
-                          '${(controller.imageOpacity.value * 100).round()}%',
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Switch.adaptive(
-                          value: controller.isOpacitySwitchEnabled.value,
-                          onChanged: (value) {
-                            controller.toggleOverlayVisibility(value);
-                            controller.isOpacitySwitchEnabled.value = value;
-                          },
-                          activeColor: Colors.blue,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

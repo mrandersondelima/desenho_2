@@ -51,11 +51,27 @@ class CameraOverlayController extends GetxController {
   RxBool isVisibilityButtonActive = false.obs;
 
   RxDouble imageOpacity = 0.5.obs;
+  RxBool showOverlayImage = true.obs;
+
+  // ==================== VARIÁVEIS DA IMAGEM (SEMPRE VISÍVEIS) ====================
+  // Estas são as variáveis da imagem que aparecem na tela
+  // A imagem sempre usa os valores do modo ajuste
   RxDouble imagePositionX = 0.0.obs;
   RxDouble imagePositionY = 0.0.obs;
   RxDouble imageScale = 1.0.obs;
-  RxDouble imageRotation = 0.0.obs; // Nova variável para rotação
-  RxBool showOverlayImage = true.obs;
+  RxDouble imageRotation = 0.0.obs;
+
+  // ==================== VARIÁVEIS DO MODO AJUSTE ====================
+  // Valores atuais da imagem (sempre usados para renderizar)
+  double _adjustModePositionX = 0.0;
+  double _adjustModePositionY = 0.0;
+  double _adjustModeScale = 1.0;
+
+  // ==================== VARIÁVEIS DO MODO DESENHO ====================
+  // Valores usados APENAS para cálculos da câmera
+  double _drawingModePositionX = 0.0;
+  double _drawingModePositionY = 0.0;
+  double _drawingModeScale = 1.0;
 
   // Posição da câmera (para sincronização no modo desenho)
   RxDouble cameraPositionX = 0.0.obs;
@@ -98,11 +114,14 @@ class CameraOverlayController extends GetxController {
 
   // Internal gesture tracking
   late Offset _startFocalPoint;
-  double _initialScale = 1.0;
-  double _initialX = 0.0;
-  double _initialY = 0.0;
-  double _initialCameraX = 0.0; // Posição X inicial da câmera
-  double _initialCameraY = 0.0; // Posição Y inicial da câmera
+  double _initialAdjustX = 0.0;
+  double _initialAdjustY = 0.0;
+  double _initialAdjustScale = 1.0;
+  double _initialDrawingX = 0.0;
+  double _initialDrawingY = 0.0;
+  double _initialDrawingScale = 1.0;
+  double _initialCameraX = 0.0;
+  double _initialCameraY = 0.0;
 
   @override
   void onInit() {
@@ -149,9 +168,6 @@ class CameraOverlayController extends GetxController {
     // Fecha as outras barras quando a barra de movimento for ativada
     if (isMoveButtonActive.value) {
       isOpacityBarExpanded.value = false;
-      isToolsBarExpanded.value = false;
-      isFlashBarExpanded.value = false;
-      isAngleBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
   }
@@ -167,11 +183,9 @@ class CameraOverlayController extends GetxController {
 
     // Quando isImageMoveButtonActive muda, o modo também muda automaticamente
     if (isImageMoveButtonActive.value) {
-      // Modo Ajuste ativado - reset das posições da câmera
-      //cameraPositionX.value = 0.0;
-      //cameraPositionY.value = 0.0;
-      //setCameraZoom(_minCameraZoom);
-      //cameraScale.value = 1.0;
+      // ==== ENTRANDO NO MODO AJUSTE ====
+      // A imagem continua visível com valores _adjustMode*
+      // A câmera fica parada (usa valores _drawingMode* que não mudam)
 
       // Se estava em modo desenho, desabilita a transparência automática
       if (isAutoTransparencyEnabled.value) {
@@ -179,14 +193,31 @@ class CameraOverlayController extends GetxController {
         _stopAutoTransparencyAnimation();
       }
     } else {
-      // Modo Desenho ativado - reset das posições da câmera e sincroniza zoom
-      // cameraPositionX.value = 0.0;
-      // cameraPositionY.value = 0.0;
-      // Sincroniza zoom da câmera com o zoom atual da imagem
-      _syncCameraZoomWithImage();
+      // ==== ENTRANDO NO MODO DESENHO ====
+      // NÃO sincroniza valores - cada modo mantém seus próprios valores
+      // Os valores _drawingMode* só serão atualizados durante gestos no modo desenho
     }
 
     _autoSave();
+  }
+
+  // Método auxiliar para sincronizar zoom da câmera com uma escala específica
+  void _syncCameraZoomWithImageScale(double scale) {
+    cameraScale.value = scale;
+
+    if (scale >= 1.0) {
+      final double imageZoomRange = 5.0 - 1.0;
+      final double cameraZoomRange = _maxCameraZoom - _minCameraZoom;
+      final double normalizedImageZoom = (scale - 1.0) / imageZoomRange;
+      final double baseCameraZoom =
+          _minCameraZoom + (normalizedImageZoom * cameraZoomRange);
+      final double compensatedCameraZoom = baseCameraZoom / scale;
+      setCameraZoomSync(
+        compensatedCameraZoom.clamp(_minCameraZoom, _maxCameraZoom),
+      );
+    } else {
+      setCameraZoomSync(_minCameraZoom);
+    }
   }
 
   void toggleMoveCameraButton() {
@@ -234,14 +265,9 @@ class CameraOverlayController extends GetxController {
 
     // Fecha as outras barras quando a barra de ferramentas for ativada
     if (isToolsButtonActive.value) {
-      isMoveBarExpanded.value = false;
-      isOpacityBarExpanded.value = false;
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
-      // Desativa também os botões secundários
-      isImageMoveButtonActive.value = false;
-      isCameraMoveButtonActive.value = false;
     }
 
     // Se estiver desativando o botão principal, fecha também a barra secundária
@@ -265,10 +291,7 @@ class CameraOverlayController extends GetxController {
 
     // Se estiver ativando, fecha outras barras
     if (isFlashButtonActive.value) {
-      isMoveBarExpanded.value = false;
-      isOpacityBarExpanded.value = false;
       isAngleBarExpanded.value = false;
-      isVisibilityBarExpanded.value = false;
     }
   }
 
@@ -294,8 +317,6 @@ class CameraOverlayController extends GetxController {
 
     // Se estiver ativando, fecha outras barras
     if (isAngleButtonActive.value) {
-      isMoveBarExpanded.value = false;
-      isOpacityBarExpanded.value = false;
       isFlashBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
@@ -316,8 +337,6 @@ class CameraOverlayController extends GetxController {
     if (isVisibilityButtonActive.value) {
       isMoveBarExpanded.value = false;
       isOpacityBarExpanded.value = false;
-      isFlashBarExpanded.value = false;
-      isAngleBarExpanded.value = false;
     }
   }
 
@@ -636,13 +655,20 @@ class CameraOverlayController extends GetxController {
     if (!isDrawingMode && !isImageMoveButtonActive.value) return;
 
     _startFocalPoint = details.focalPoint;
-    _initialScale = imageScale.value;
-    _initialX = imagePositionX.value;
-    _initialY = imagePositionY.value;
-    _initialCameraX =
-        cameraPositionX.value; // Armazena posição X inicial da câmera
-    _initialCameraY =
-        cameraPositionY.value; // Armazena posição Y inicial da câmera
+
+    // Sempre inicializa valores do modo ajuste (imagem)
+    _initialAdjustScale = _adjustModeScale;
+    _initialAdjustX = _adjustModePositionX;
+    _initialAdjustY = _adjustModePositionY;
+
+    if (isDrawingMode) {
+      // Modo desenho: também inicializa valores do modo desenho (câmera)
+      _initialDrawingScale = _drawingModeScale;
+      _initialDrawingX = _drawingModePositionX;
+      _initialDrawingY = _drawingModePositionY;
+      _initialCameraX = cameraPositionX.value;
+      _initialCameraY = cameraPositionY.value;
+    }
   }
 
   void onScaleUpdate(ScaleUpdateDetails details) {
@@ -650,55 +676,56 @@ class CameraOverlayController extends GetxController {
     // No modo ajuste, só permite manipulação se o botão "Mover Imagem" estiver ativo
     if (!isDrawingMode && !isImageMoveButtonActive.value) return;
 
+    // ===== SEMPRE ATUALIZA A IMAGEM (usa _adjustMode*) =====
+    final double newScale = (_initialAdjustScale * details.scale).clamp(
+      0.2,
+      5.0,
+    );
+    _adjustModeScale = newScale;
+    imageScale.value = newScale; // Imagem visível sempre usa _adjustMode*
+
+    // Movimento
+    final dx = details.focalPoint.dx - _startFocalPoint.dx;
+    final dy = details.focalPoint.dy - _startFocalPoint.dy;
+
+    _adjustModePositionX = _initialAdjustX + dx;
+    _adjustModePositionY = _initialAdjustY + dy;
+    imagePositionX.value =
+        _adjustModePositionX; // Imagem visível sempre usa _adjustMode*
+    imagePositionY.value = _adjustModePositionY;
+
     if (isDrawingMode) {
-      // Modo Desenho: zoom na câmera e na imagem simultaneamente com sincronização perfeita
-      final double newScale = (_initialScale * details.scale).clamp(0.2, 5.0);
-      imageScale.value = newScale;
+      // ===== MODO DESENHO: TAMBÉM ATUALIZA CÂMERA =====
+      // Atualiza valores do modo desenho (usados para câmera)
+      final double newDrawingScale = (_initialDrawingScale * details.scale)
+          .clamp(0.2, 5.0);
+      _drawingModeScale = newDrawingScale;
+      _drawingModePositionX = _initialDrawingX + dx;
+      _drawingModePositionY = _initialDrawingY + dy;
 
-      // Sincronização perfeita: sempre usa cameraScale igual ao imageScale para perfeita sincronia
-      // O zoom da câmera é ajustado para compensar e evitar zoom duplo
-      cameraScale.value = newScale;
+      // Sincronização da câmera usando valores do modo desenho
+      cameraScale.value = _drawingModeScale;
 
-      if (newScale >= 1.0) {
-        // Para zoom >= 1.0: usa zoom da câmera reduzido para compensar o cameraScale
-        final double imageZoomRange = 5.0 - 1.0; // 4.0
+      if (_drawingModeScale >= 1.0) {
+        final double imageZoomRange = 5.0 - 1.0;
         final double cameraZoomRange = _maxCameraZoom - _minCameraZoom;
         final double normalizedImageZoom =
-            (newScale - 1.0) / imageZoomRange; // 0.0 a 1.0
-
-        // Calcula zoom da câmera compensado para evitar zoom duplo
+            (_drawingModeScale - 1.0) / imageZoomRange;
         final double baseCameraZoom =
             _minCameraZoom + (normalizedImageZoom * cameraZoomRange);
-        final double compensatedCameraZoom =
-            baseCameraZoom / newScale; // Compensa o cameraScale
-
+        final double compensatedCameraZoom = baseCameraZoom / _drawingModeScale;
         setCameraZoomSync(
           compensatedCameraZoom.clamp(_minCameraZoom, _maxCameraZoom),
         );
       } else {
-        // Para zoom < 1.0: câmera no zoom mínimo
         setCameraZoomSync(_minCameraZoom);
-      } // No modo desenho, sempre permite movimento (pan e drag)
-      // Update position (drag) — calculate delta from start focal point
-      final dx = details.focalPoint.dx - _startFocalPoint.dx;
-      final dy = details.focalPoint.dy - _startFocalPoint.dy;
+      }
 
-      // Sincroniza posição da imagem e câmera
-      imagePositionX.value = _initialX + dx;
-      imagePositionY.value = _initialY + dy;
+      // Move câmera junto
       cameraPositionX.value = _initialCameraX + dx;
       cameraPositionY.value = _initialCameraY + dy;
-    } else {
-      // Modo Ajuste: apenas a imagem é manipulada (comportamento original)
-      final double newScale = (_initialScale * details.scale).clamp(0.2, 5.0);
-      imageScale.value = newScale;
-
-      // Update position (drag) — calculate delta from start focal point
-      final dx = details.focalPoint.dx - _startFocalPoint.dx;
-      final dy = details.focalPoint.dy - _startFocalPoint.dy;
-      imagePositionX.value = _initialX + dx;
-      imagePositionY.value = _initialY + dy;
     }
+    // No modo ajuste: câmera NÃO é alterada (usa valores _drawingMode* que ficam fixos)
 
     // Atualiza dimensões atuais quando escala mudar
     _updateCurrentDimensions();
@@ -719,32 +746,7 @@ class CameraOverlayController extends GetxController {
   }
 
   // Métodos de controle de zoom da câmera
-  void _syncCameraZoomWithImage() {
-    // Sincronização perfeita: sempre usa cameraScale igual ao imageScale para perfeita sincronia
-    // O zoom da câmera é ajustado para compensar e evitar zoom duplo
-    cameraScale.value = imageScale.value;
-
-    if (imageScale.value >= 1.0) {
-      // Para zoom >= 1.0: usa zoom da câmera reduzido para compensar o cameraScale
-      final double imageZoomRange = 5.0 - 1.0; // 4.0
-      final double cameraZoomRange = _maxCameraZoom - _minCameraZoom;
-      final double normalizedImageZoom =
-          (imageScale.value - 1.0) / imageZoomRange; // 0.0 a 1.0
-
-      // Calcula zoom da câmera compensado para evitar zoom duplo
-      final double baseCameraZoom =
-          _minCameraZoom + (normalizedImageZoom * cameraZoomRange);
-      final double compensatedCameraZoom =
-          baseCameraZoom / imageScale.value; // Compensa o cameraScale
-
-      setCameraZoomSync(
-        compensatedCameraZoom.clamp(_minCameraZoom, _maxCameraZoom),
-      );
-    } else {
-      // Para zoom < 1.0: câmera no zoom mínimo
-      setCameraZoomSync(_minCameraZoom);
-    }
-  }
+  // OBS: _syncCameraZoomWithImage() foi removido, use _syncCameraZoomWithImageScale() que já existe
 
   Future<void> setCameraZoom(double zoom) async {
     if (cameraController.value != null && isCameraInitialized.value) {
@@ -877,12 +879,15 @@ class CameraOverlayController extends GetxController {
     // Só permite escala se o botão "Mover Imagem" estiver ativo
     if (!isImageMoveButtonActive.value) return;
 
+    // Atualiza os valores da imagem (_adjustMode*)
+    _adjustModeScale = scale;
     imageScale.value = scale;
     _updateCurrentDimensions(); // Atualiza dimensões quando escala mudar
 
-    // Se estiver no modo desenho, sincroniza o zoom da câmera
+    // Se estiver no modo desenho, também atualiza valores do modo desenho e sincroniza câmera
     if (isDrawingMode) {
-      _syncCameraZoomWithImage();
+      _drawingModeScale = scale;
+      _syncCameraZoomWithImageScale(_drawingModeScale);
     }
 
     _autoSave();
@@ -898,6 +903,11 @@ class CameraOverlayController extends GetxController {
   }
 
   void resetImageTransform() {
+    // Reset dos valores da imagem (_adjustMode*)
+    _adjustModePositionX = 0.0;
+    _adjustModePositionY = 0.0;
+    _adjustModeScale = 1.0;
+
     imagePositionX.value = 0.0;
     imagePositionY.value = 0.0;
     imageScale.value = 1.0;
@@ -905,17 +915,17 @@ class CameraOverlayController extends GetxController {
     imageOpacity.value = 0.5;
     rotationTextController.text = '0';
 
+    // Reset dos valores do modo desenho (_drawingMode*)
+    _drawingModePositionX = 0.0;
+    _drawingModePositionY = 0.0;
+    _drawingModeScale = 1.0;
+
     // Reset das posições da câmera
     cameraPositionX.value = 0.0;
     cameraPositionY.value = 0.0;
 
-    // Se estiver no modo desenho, sincroniza zoom da câmera com a imagem resetada (1.0)
-    if (isDrawingMode) {
-      _syncCameraZoomWithImage();
-    } else {
-      // No modo ajuste, apenas reseta o zoom da câmera
-      setCameraZoom(_minCameraZoom);
-    }
+    // Reseta zoom da câmera usando valores do modo desenho
+    _syncCameraZoomWithImageScale(_drawingModeScale);
 
     // Reset da transparência automática
     autoTransparencyValue.value = 0.5;
