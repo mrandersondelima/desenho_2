@@ -141,6 +141,16 @@ class CameraOverlayScreen extends StatelessWidget {
                                   Get.back();
                                 },
                               ),
+
+                              Obx(
+                                () => _buildToolbarButton(
+                                  label: 'Reiniciar',
+                                  isActive: false,
+                                  onPressed: () {
+                                    controller.resetImageTransform();
+                                  },
+                                ),
+                              ),
                               // Botão Ferramentas
                               Obx(
                                 () => _buildToolbarButton(
