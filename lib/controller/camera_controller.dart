@@ -292,6 +292,7 @@ class CameraOverlayController extends GetxController {
     // Se estiver ativando, fecha outras barras
     if (isFlashButtonActive.value) {
       isAngleBarExpanded.value = false;
+      isVisibilityBarExpanded.value = false;
     }
   }
 
@@ -337,6 +338,8 @@ class CameraOverlayController extends GetxController {
     if (isVisibilityButtonActive.value) {
       isMoveBarExpanded.value = false;
       isOpacityBarExpanded.value = false;
+      isFlashBarExpanded.value = false;
+      isAngleBarExpanded.value = false;
     }
   }
 
