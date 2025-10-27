@@ -49,37 +49,44 @@ class CameraOverlayScreen extends StatelessWidget {
           Positioned.fill(child: Container(color: Colors.white)),
 
           // câmera
-          Obx(
-            () => Positioned.fill(
-              child: Transform.translate(
-                offset: Offset(
-                  controller.cameraPositionX.value,
-                  controller.cameraPositionY.value,
-                ),
-                child: Transform.scale(
-                  scale: controller.cameraScale.value,
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: controller
-                          .cameraController
-                          .value!
-                          .value
-                          .previewSize!
-                          .height,
-                      height: controller
-                          .cameraController
-                          .value!
-                          .value
-                          .previewSize!
-                          .width,
-                      child: CameraPreview(controller.cameraController.value!),
+          Obx(() {
+            if (controller.isCameraInitialized.value &&
+                controller.cameraController.value != null) {
+              return Positioned.fill(
+                child: Transform.translate(
+                  offset: Offset(
+                    controller.cameraPositionX.value,
+                    controller.cameraPositionY.value,
+                  ),
+                  child: Transform.scale(
+                    scale: controller.cameraScale.value,
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: controller
+                            .cameraController
+                            .value!
+                            .value
+                            .previewSize!
+                            .height,
+                        height: controller
+                            .cameraController
+                            .value!
+                            .value
+                            .previewSize!
+                            .width,
+                        child: CameraPreview(
+                          controller.cameraController.value!,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
+              );
+            } else {
+              return Container();
+            }
+          }),
 
           Obx(() {
             if (controller.hasOverlayImages &&
