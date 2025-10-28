@@ -80,7 +80,8 @@ class CameraOverlayController extends GetxController {
   // Modo de interação é determinado pelo estado do botão de mover imagem
   // true = modo desenho (quando isImageMoveButtonActive = false)
   // false = modo ajuste (quando isImageMoveButtonActive = true)
-  bool get isDrawingMode => !isImageMoveButtonActive.value;
+  bool get isDrawingMode =>
+      !isImageMoveButtonActive.value && !isCameraMoveButtonActive.value;
 
   // Toggle para transparência automática (apenas no modo desenho)
   RxBool isAutoTransparencyEnabled = false.obs;
@@ -700,6 +701,11 @@ class CameraOverlayController extends GetxController {
       imagePositionY.value = dy + _initialImageY;
 
       imageScale.value = _initialImageScale * scaleChange;
+    } else if (isCameraMoveButtonActive.value) {
+      cameraPositionX.value = dx + _initialCameraX;
+      cameraPositionY.value = dy + _initialCameraY;
+
+      cameraScale.value = _initialCameraScale * scaleChange;
     }
   }
 

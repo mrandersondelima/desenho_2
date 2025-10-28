@@ -53,30 +53,47 @@ class CameraOverlayScreen extends StatelessWidget {
             if (controller.isCameraInitialized.value &&
                 controller.cameraController.value != null) {
               return Positioned.fill(
-                child: Transform.translate(
-                  offset: Offset(
-                    controller.cameraPositionX.value,
-                    controller.cameraPositionY.value,
-                  ),
-                  child: Transform.scale(
-                    scale: controller.cameraScale.value,
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: controller
-                            .cameraController
-                            .value!
-                            .value
-                            .previewSize!
-                            .height,
-                        height: controller
-                            .cameraController
-                            .value!
-                            .value
-                            .previewSize!
-                            .width,
-                        child: CameraPreview(
-                          controller.cameraController.value!,
+                child: GestureDetector(
+                  onScaleStart:
+                      controller.isCameraMoveButtonActive.value ||
+                          controller.isDrawingMode
+                      ? controller.onScaleStart
+                      : null,
+                  onScaleUpdate:
+                      controller.isCameraMoveButtonActive.value ||
+                          controller.isDrawingMode
+                      ? controller.onScaleUpdate
+                      : null,
+                  onScaleEnd:
+                      controller.isCameraMoveButtonActive.value ||
+                          controller.isDrawingMode
+                      ? controller.onScaleEnd
+                      : null,
+                  child: Transform.translate(
+                    offset: Offset(
+                      controller.cameraPositionX.value,
+                      controller.cameraPositionY.value,
+                    ),
+                    child: Transform.scale(
+                      scale: controller.cameraScale.value,
+                      child: FittedBox(
+                        fit: BoxFit.cover,
+                        child: SizedBox(
+                          width: controller
+                              .cameraController
+                              .value!
+                              .value
+                              .previewSize!
+                              .height,
+                          height: controller
+                              .cameraController
+                              .value!
+                              .value
+                              .previewSize!
+                              .width,
+                          child: CameraPreview(
+                            controller.cameraController.value!,
+                          ),
                         ),
                       ),
                     ),
@@ -399,7 +416,9 @@ class CameraOverlayScreen extends StatelessWidget {
 
           Obx(
             () => Visibility(
-              visible: controller.isMoveBarExpanded.value,
+              visible:
+                  controller.isMoveBarExpanded.value &&
+                  controller.areControlsVisible.value,
               child: Positioned(
                 bottom: controller.isMoveBarExpanded.value ? 50 : -30,
                 left: 0,
