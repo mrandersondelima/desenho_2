@@ -46,7 +46,20 @@ class CameraOverlayScreen extends StatelessWidget {
             return Container();
           }),
 
-          Positioned.fill(child: Container(color: Colors.white)),
+          Positioned.fill(
+            child: GestureDetector(
+              onScaleStart: controller.isDrawingMode
+                  ? controller.onScaleStart
+                  : null,
+              onScaleUpdate: controller.isDrawingMode
+                  ? controller.onScaleUpdate
+                  : null,
+              onScaleEnd: controller.isDrawingMode
+                  ? controller.onScaleEnd
+                  : null,
+              child: Container(color: Colors.white),
+            ),
+          ),
 
           // câmera
           Obx(() {
