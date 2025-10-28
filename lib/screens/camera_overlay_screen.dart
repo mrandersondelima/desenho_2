@@ -76,6 +76,7 @@ class CameraOverlayScreen extends StatelessWidget {
                     ),
                     child: Transform.scale(
                       scale: controller.cameraScale.value,
+                      alignment: Alignment.center,
                       child: FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
@@ -120,11 +121,11 @@ class CameraOverlayScreen extends StatelessWidget {
                     ),
                     child: Transform.scale(
                       scale: controller.imageScale.value,
+                      alignment: Alignment.center,
                       child: Transform.rotate(
-                        angle:
-                            controller.imageRotation.value *
-                            3.14159 /
-                            180, // Converte graus para radianos
+                        angle: controller
+                            .imageRotation
+                            .value, // Converte graus para radianos
                         child: Opacity(
                           opacity: controller.autoTransparencyValue.value,
                           child: Center(

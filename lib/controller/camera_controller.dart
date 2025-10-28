@@ -678,6 +678,7 @@ class CameraOverlayController extends GetxController {
     // No modo ajuste, só permite manipulação se o botão "Mover Imagem" estiver ativo
 
     double scaleChange = details.scale;
+    double rotationChange = details.rotation;
 
     // Movimento
     final dx = details.focalPoint.dx - _startFocalPoint.dx;
@@ -699,6 +700,12 @@ class CameraOverlayController extends GetxController {
     } else if (isImageMoveButtonActive.value) {
       imagePositionX.value = dx + _initialImageX;
       imagePositionY.value = dy + _initialImageY;
+
+      final newRotation = rotationChange + _initialImageRotation;
+      final normalizedValue = newRotation % 360;
+      imageRotation.value = normalizedValue < 0
+          ? normalizedValue + 360
+          : normalizedValue;
 
       imageScale.value = _initialImageScale * scaleChange;
     } else if (isCameraMoveButtonActive.value) {
