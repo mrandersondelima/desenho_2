@@ -89,7 +89,6 @@ class CameraOverlayScreen extends StatelessWidget {
                     ),
                     child: Transform.scale(
                       scale: controller.cameraScale.value,
-                      alignment: Alignment.center,
                       child: FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
@@ -134,7 +133,6 @@ class CameraOverlayScreen extends StatelessWidget {
                     ),
                     child: Transform.scale(
                       scale: controller.imageScale.value,
-                      alignment: Alignment.center,
                       child: Transform.rotate(
                         angle: controller
                             .imageRotation

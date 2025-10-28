@@ -52,6 +52,7 @@ class CameraOverlayController extends GetxController {
 
   RxDouble imageOpacity = 0.5.obs;
   RxBool showOverlayImage = true.obs;
+  Rx<Offset> focalPoint = Offset.zero.obs;
 
   // ==================== VARIÁVEIS DA IMAGEM (SEMPRE VISÍVEIS) ====================
   // Estas são as variáveis da imagem que aparecem na tela
@@ -680,9 +681,14 @@ class CameraOverlayController extends GetxController {
     double scaleChange = details.scale;
     double rotationChange = details.rotation;
 
-    // Movimento
-    final dx = details.focalPoint.dx - _startFocalPoint.dx;
-    final dy = details.focalPoint.dy - _startFocalPoint.dy;
+    // Ponto focal atual (onde o usuário está tocando/fazendo pinch)
+    final currentFocalPoint = details.focalPoint;
+
+    // Movimento (pan/drag)
+    final dx = currentFocalPoint.dx - _startFocalPoint.dx;
+    final dy = currentFocalPoint.dy - _startFocalPoint.dy;
+
+    focalPoint.value = currentFocalPoint;
 
     // Debug: print focalPoint information
     print('focalPoint: ${details.focalPoint}');
@@ -690,29 +696,78 @@ class CameraOverlayController extends GetxController {
     print('focalPointDelta: ${details.focalPointDelta}');
 
     if (isDrawingMode) {
-      cameraPositionX.value = dx + _initialCameraX;
-      cameraPositionY.value = dy + _initialCameraY;
-      imagePositionX.value = dx + _initialImageX;
-      imagePositionY.value = dy + _initialImageY;
+      // MODO DESENHO: Move câmera e imagem juntos
 
-      cameraScale.value = _initialCameraScale * scaleChange;
-      imageScale.value = _initialImageScale * scaleChange;
+      // Nova escala
+      final newCameraScale = _initialCameraScale * scaleChange;
+      final newImageScale = _initialImageScale * scaleChange;
+
+      // Calcula nova posição da câmera mantendo o ponto focal fixo
+      // Fórmula: novaPos = pontoFocal - (pontoFocal - posInicial) * (novaEscala / escalaInicial)
+      final cameraScaleRatio = newCameraScale / _initialCameraScale;
+      cameraPositionX.value =
+          _startFocalPoint.dx -
+          (_startFocalPoint.dx - _initialCameraX) * cameraScaleRatio +
+          dx;
+      cameraPositionY.value =
+          _startFocalPoint.dy -
+          (_startFocalPoint.dy - _initialCameraY) * cameraScaleRatio +
+          dy;
+
+      // Calcula nova posição da imagem mantendo o ponto focal fixo
+      final imageScaleRatio = newImageScale / _initialImageScale;
+      imagePositionX.value =
+          _startFocalPoint.dx -
+          (_startFocalPoint.dx - _initialImageX) * imageScaleRatio +
+          dx;
+      imagePositionY.value =
+          _startFocalPoint.dy -
+          (_startFocalPoint.dy - _initialImageY) * imageScaleRatio +
+          dy;
+
+      cameraScale.value = newCameraScale;
+      imageScale.value = newImageScale;
     } else if (isImageMoveButtonActive.value) {
-      imagePositionX.value = dx + _initialImageX;
-      imagePositionY.value = dy + _initialImageY;
+      // MODO AJUSTE IMAGEM: Move apenas a imagem
 
+      final newImageScale = _initialImageScale * scaleChange;
+
+      // Calcula nova posição da imagem mantendo o ponto focal fixo
+      final imageScaleRatio = newImageScale / _initialImageScale;
+      imagePositionX.value =
+          _startFocalPoint.dx -
+          (_startFocalPoint.dx - _initialImageX) * imageScaleRatio +
+          dx;
+      imagePositionY.value =
+          _startFocalPoint.dy -
+          (_startFocalPoint.dy - _initialImageY) * imageScaleRatio +
+          dy;
+
+      // Rotação
       final newRotation = rotationChange + _initialImageRotation;
       final normalizedValue = newRotation % 360;
       imageRotation.value = normalizedValue < 0
           ? normalizedValue + 360
           : normalizedValue;
 
-      imageScale.value = _initialImageScale * scaleChange;
+      imageScale.value = newImageScale;
     } else if (isCameraMoveButtonActive.value) {
-      cameraPositionX.value = dx + _initialCameraX;
-      cameraPositionY.value = dy + _initialCameraY;
+      // MODO AJUSTE CÂMERA: Move apenas a câmera
 
-      cameraScale.value = _initialCameraScale * scaleChange;
+      final newCameraScale = _initialCameraScale * scaleChange;
+
+      // Calcula nova posição da câmera mantendo o ponto focal fixo
+      final cameraScaleRatio = newCameraScale / _initialCameraScale;
+      cameraPositionX.value =
+          _startFocalPoint.dx -
+          (_startFocalPoint.dx - _initialCameraX) * cameraScaleRatio +
+          dx;
+      cameraPositionY.value =
+          _startFocalPoint.dy -
+          (_startFocalPoint.dy - _initialCameraY) * cameraScaleRatio +
+          dy;
+
+      cameraScale.value = newCameraScale;
     }
   }
 
