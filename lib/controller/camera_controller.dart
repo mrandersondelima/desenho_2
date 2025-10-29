@@ -275,14 +275,20 @@ class CameraOverlayController extends GetxController {
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
+      isToolsBarExpanded.value = true;
     }
 
     // Se estiver desativando o botão principal, fecha também a barra secundária
-    // if (!isToolsButtonActive.value) {
-    //   isToolsBarExpanded.value = false;
-    //   isFlashButtonActive.value = false;
-    //   isIlluminationButtonActive.value = false;
-    // }
+    if (!isToolsButtonActive.value) {
+      isToolsBarExpanded.value = false;
+      isFlashButtonActive.value = false;
+      isIlluminationButtonActive.value = false;
+      isFlashBarExpanded.value = false;
+      isAngleBarExpanded.value = false;
+      isVisibilityBarExpanded.value = false;
+      isAngleButtonActive.value = false;
+      isVisibilityButtonActive.value = false;
+    }
   }
 
   void toggleFlashButton() {

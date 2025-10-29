@@ -189,8 +189,6 @@ class CameraOverlayScreen extends StatelessWidget {
                           isActive: controller.isToolsButtonActive.value,
                           onPressed: () {
                             controller.toggleToolsButton();
-                            controller.isToolsBarExpanded.value =
-                                !controller.isToolsBarExpanded.value;
                           },
                         ),
                       ],
@@ -725,15 +723,12 @@ class CameraOverlayScreen extends StatelessWidget {
                           ),
 
                           // Botão Esconder
-                          Obx(
-                            () => _buildToolbarButton(
-                              label: 'Esconder',
-                              isActive: controller.isHideButtonActive.value,
-                              onPressed: () {
-                                controller.toggleHideButton();
-                                controller.toggleVisibility();
-                              },
-                            ),
+                          _buildToolbarButton(
+                            label: 'Esconder',
+                            onPressed: () {
+                              controller.toggleHideButton();
+                              controller.toggleVisibility();
+                            },
                           ),
 
                           // Botão Opacidade
