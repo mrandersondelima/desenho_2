@@ -772,11 +772,8 @@ class CameraOverlayController extends GetxController {
   }
 
   void onScaleEnd(ScaleEndDetails details) {
-    // No modo desenho, sempre salva as alterações de zoom e movimento
-    // No modo ajuste, só salva se o botão "Mover Imagem" estiver ativo
-    if (!isDrawingMode && !isImageMoveButtonActive.value) return;
-
-    // Salva após terminar o gesto
+    // Sempre salva as alterações, independente do modo
+    // O controle de qual elemento foi movido já é feito no onScaleUpdate
     _autoSave();
   }
 

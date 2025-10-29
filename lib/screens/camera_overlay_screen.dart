@@ -46,17 +46,25 @@ class CameraOverlayScreen extends StatelessWidget {
             return Container();
           }),
 
+          // GestureDetector global para capturar todos os gestos (pinch, pan, etc)
+          // Deve estar ACIMA da câmera e imagem para capturar gestos que tocam ambos
           Positioned.fill(
             child: GestureDetector(
-              onScaleStart: controller.isDrawingMode
-                  ? controller.onScaleStart
-                  : null,
-              onScaleUpdate: controller.isDrawingMode
-                  ? controller.onScaleUpdate
-                  : null,
-              onScaleEnd: controller.isDrawingMode
-                  ? controller.onScaleEnd
-                  : null,
+              onScaleStart: controller.onScaleStart,
+              onScaleUpdate: controller.onScaleUpdate,
+              onScaleEnd: controller.onScaleEnd,
+              behavior: HitTestBehavior
+                  .translucent, // Permite que gestos passem através quando não consumidos
+              child: Container(
+                color: Colors.transparent,
+              ), // Container transparente para capturar gestos
+            ),
+          ),
+
+          // Fundo branco
+          Positioned.fill(
+            child: IgnorePointer(
+              // Ignora toques para não interferir com GestureDetector global
               child: Container(color: Colors.white),
             ),
           ),
@@ -66,22 +74,8 @@ class CameraOverlayScreen extends StatelessWidget {
             if (controller.isCameraInitialized.value &&
                 controller.cameraController.value != null) {
               return Positioned.fill(
-                child: GestureDetector(
-                  onScaleStart:
-                      controller.isCameraMoveButtonActive.value ||
-                          controller.isDrawingMode
-                      ? controller.onScaleStart
-                      : null,
-                  onScaleUpdate:
-                      controller.isCameraMoveButtonActive.value ||
-                          controller.isDrawingMode
-                      ? controller.onScaleUpdate
-                      : null,
-                  onScaleEnd:
-                      controller.isCameraMoveButtonActive.value ||
-                          controller.isDrawingMode
-                      ? controller.onScaleEnd
-                      : null,
+                child: IgnorePointer(
+                  // Ignora toques para não interferir com GestureDetector global
                   child: Transform.translate(
                     offset: Offset(
                       controller.cameraPositionX.value,
@@ -118,14 +112,13 @@ class CameraOverlayScreen extends StatelessWidget {
             }
           }),
 
+          // Imagem de sobreposição
           Obx(() {
             if (controller.hasOverlayImages &&
                 controller.showOverlayImage.value) {
               return Positioned.fill(
-                child: GestureDetector(
-                  onScaleStart: controller.onScaleStart,
-                  onScaleUpdate: controller.onScaleUpdate,
-                  onScaleEnd: controller.onScaleEnd,
+                child: IgnorePointer(
+                  // Ignora toques para não interferir com GestureDetector global
                   child: Transform.translate(
                     offset: Offset(
                       controller.imagePositionX.value,
