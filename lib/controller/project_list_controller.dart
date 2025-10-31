@@ -136,9 +136,21 @@ class ProjectListController extends GetxController {
             .toList();
 
         if (imagePaths.isNotEmpty) {
+          // Converte os caminhos em objetos OverlayImage com títulos padrão
+          final overlayImages = imagePaths
+              .asMap()
+              .entries
+              .map(
+                (entry) => OverlayImage(
+                  path: entry.value,
+                  title: 'Imagem ${entry.key + 1}',
+                ),
+              )
+              .toList();
+
           // Atualiza o projeto com as imagens selecionadas
           final updatedProject = project.copyWith(
-            overlayImagePaths: imagePaths,
+            overlayImages: overlayImages,
             currentImageIndex: 0,
             lastModified: DateTime.now(),
           );

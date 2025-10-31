@@ -319,7 +319,7 @@ class CameraOverlayScreen extends StatelessWidget {
                       child: SafeArea(
                         child: Container(
                           height:
-                              60, // Altura um pouco maior para acomodar a lista de imagens
+                              90, // Altura um pouco maior para acomodar a lista de imagens
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border(
@@ -343,7 +343,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: controller.overlayImagePaths.isEmpty
+                                  child: controller.overlayImages.isEmpty
                                       ? const Center(
                                           child: Text(
                                             'Nenhuma imagem carregada',
@@ -355,44 +355,159 @@ class CameraOverlayScreen extends StatelessWidget {
                                         )
                                       : ListView.builder(
                                           scrollDirection: Axis.horizontal,
-                                          itemCount: controller
-                                              .overlayImagePaths
-                                              .length,
+                                          itemCount:
+                                              controller.overlayImages.length,
                                           itemBuilder: (context, index) {
                                             bool isSelected =
                                                 controller
                                                     .currentImageIndex
                                                     .value ==
                                                 index;
+                                            final image =
+                                                controller.overlayImages[index];
                                             return GestureDetector(
                                               onTap: () => controller
                                                   .selectImageByIndex(index),
+                                              onLongPress: () => controller
+                                                  .editImageTitle(index),
                                               child: Container(
                                                 margin: const EdgeInsets.only(
-                                                  right: 8,
+                                                  right: 12,
                                                 ),
-                                                width: 45,
-                                                height: 45,
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                    color: isSelected
-                                                        ? Colors.blue
-                                                        : Colors.grey,
-                                                    width: isSelected ? 2 : 1,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
-                                                  child: Image.file(
-                                                    File(
-                                                      controller
-                                                          .overlayImagePaths[index],
+                                                width: 70,
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Container(
+                                                      width: 60,
+                                                      height: 60,
+                                                      decoration: BoxDecoration(
+                                                        border: Border.all(
+                                                          color: isSelected
+                                                              ? Colors.blue
+                                                              : Colors.grey,
+                                                          width: isSelected
+                                                              ? 2
+                                                              : 1,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                      ),
+                                                      child: Stack(
+                                                        children: [
+                                                          ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  6,
+                                                                ),
+                                                            child: Image.file(
+                                                              File(image.path),
+                                                              fit: BoxFit.cover,
+                                                              width: 60,
+                                                              height: 60,
+                                                            ),
+                                                          ),
+                                                          // Botões de reordenar
+                                                          if (isSelected)
+                                                            Positioned(
+                                                              top: 0,
+                                                              right: 0,
+                                                              child: Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .min,
+                                                                children: [
+                                                                  if (index > 0)
+                                                                    GestureDetector(
+                                                                      onTap: () =>
+                                                                          controller.moveImageUp(
+                                                                            index,
+                                                                          ),
+                                                                      child: Container(
+                                                                        width:
+                                                                            20,
+                                                                        height:
+                                                                            20,
+                                                                        decoration: BoxDecoration(
+                                                                          color: Colors.blue.withOpacity(
+                                                                            0.8,
+                                                                          ),
+                                                                          shape:
+                                                                              BoxShape.circle,
+                                                                        ),
+                                                                        child: const Icon(
+                                                                          Icons
+                                                                              .arrow_back,
+                                                                          size:
+                                                                              12,
+                                                                          color:
+                                                                              Colors.white,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  const SizedBox(
+                                                                    width: 2,
+                                                                  ),
+                                                                  if (index <
+                                                                      controller
+                                                                              .overlayImages
+                                                                              .length -
+                                                                          1)
+                                                                    GestureDetector(
+                                                                      onTap: () =>
+                                                                          controller.moveImageDown(
+                                                                            index,
+                                                                          ),
+                                                                      child: Container(
+                                                                        width:
+                                                                            20,
+                                                                        height:
+                                                                            20,
+                                                                        decoration: BoxDecoration(
+                                                                          color: Colors.blue.withOpacity(
+                                                                            0.8,
+                                                                          ),
+                                                                          shape:
+                                                                              BoxShape.circle,
+                                                                        ),
+                                                                        child: const Icon(
+                                                                          Icons
+                                                                              .arrow_forward,
+                                                                          size:
+                                                                              12,
+                                                                          color:
+                                                                              Colors.white,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                    fit: BoxFit.cover,
-                                                  ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      image.title,
+                                                      maxLines: 2,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: isSelected
+                                                            ? Colors.blue
+                                                            : Colors.black87,
+                                                        fontSize: 10,
+                                                        fontWeight: isSelected
+                                                            ? FontWeight.bold
+                                                            : FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             );
@@ -400,7 +515,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                         ),
                                 ),
                                 Text(
-                                  '${controller.currentImageIndex.value + 1}/${controller.overlayImagePaths.length}',
+                                  '${controller.currentImageIndex.value + 1}/${controller.overlayImages.length}',
                                   style: const TextStyle(
                                     color: Colors.black,
                                     fontWeight: FontWeight.w500,
@@ -456,7 +571,9 @@ class CameraOverlayScreen extends StatelessWidget {
           // Barra de opacidade deslizante
           Obx(
             () => Visibility(
-              visible: controller.isOpacityBarExpanded.value,
+              visible:
+                  controller.isOpacityBarExpanded.value &&
+                  controller.areControlsVisible.value,
               child: Positioned(
                 bottom: controller.isOpacityBarExpanded.value ? 50 : -30,
                 left: 0,

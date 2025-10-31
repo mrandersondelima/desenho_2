@@ -1,5 +1,34 @@
 import 'dart:convert';
 
+// Modelo para representar uma imagem overlay com título
+class OverlayImage {
+  final String path;
+  final String title;
+
+  const OverlayImage({required this.path, required this.title});
+
+  Map<String, dynamic> toMap() {
+    return {'path': path, 'title': title};
+  }
+
+  factory OverlayImage.fromMap(Map<String, dynamic> map) {
+    return OverlayImage(path: map['path'] ?? '', title: map['title'] ?? '');
+  }
+
+  OverlayImage copyWith({String? path, String? title}) {
+    return OverlayImage(path: path ?? this.path, title: title ?? this.title);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is OverlayImage && other.path == path && other.title == title;
+  }
+
+  @override
+  int get hashCode => path.hashCode ^ title.hashCode;
+}
+
 class Project {
   final String id;
   final String name;
@@ -7,7 +36,7 @@ class Project {
   final DateTime lastModified;
 
   // Configurações das imagens sobrepostas
-  final List<String> overlayImagePaths; // Lista de caminhos das imagens
+  final List<OverlayImage> overlayImages; // Lista de imagens com títulos
   final int currentImageIndex; // Índice da imagem atualmente exibida
   final double imageOpacity;
   final double imagePositionX;
@@ -26,7 +55,7 @@ class Project {
     required this.name,
     required this.createdAt,
     required this.lastModified,
-    this.overlayImagePaths = const [],
+    this.overlayImages = const [],
     this.currentImageIndex = 0,
     this.imageOpacity = 0.5,
     this.imagePositionX = 0.0,
@@ -61,7 +90,7 @@ class Project {
     String? name,
     DateTime? createdAt,
     DateTime? lastModified,
-    List<String>? overlayImagePaths,
+    List<OverlayImage>? overlayImages,
     int? currentImageIndex,
     double? imageOpacity,
     double? imagePositionX,
@@ -78,7 +107,7 @@ class Project {
       name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,
       lastModified: lastModified ?? DateTime.now(),
-      overlayImagePaths: overlayImagePaths ?? this.overlayImagePaths,
+      overlayImages: overlayImages ?? this.overlayImages,
       currentImageIndex: currentImageIndex ?? this.currentImageIndex,
       imageOpacity: imageOpacity ?? this.imageOpacity,
       imagePositionX: imagePositionX ?? this.imagePositionX,
@@ -99,7 +128,7 @@ class Project {
       'name': name,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'lastModified': lastModified.millisecondsSinceEpoch,
-      'overlayImagePaths': overlayImagePaths,
+      'overlayImages': overlayImages.map((img) => img.toMap()).toList(),
       'currentImageIndex': currentImageIndex,
       'imageOpacity': imageOpacity,
       'imagePositionX': imagePositionX,
@@ -122,7 +151,13 @@ class Project {
       lastModified: DateTime.fromMillisecondsSinceEpoch(
         map['lastModified'] ?? 0,
       ),
-      overlayImagePaths: List<String>.from(map['overlayImagePaths'] ?? []),
+      overlayImages:
+          (map['overlayImages'] as List?)
+              ?.map(
+                (item) => OverlayImage.fromMap(item as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
       currentImageIndex: map['currentImageIndex']?.toInt() ?? 0,
       imageOpacity: (map['imageOpacity'] ?? 0.5).toDouble(),
       imagePositionX: (map['imagePositionX'] ?? 0.0).toDouble(),
@@ -145,7 +180,7 @@ class Project {
 
   @override
   String toString() {
-    return 'Project(id: $id, name: $name, createdAt: $createdAt, lastModified: $lastModified, overlayImagePaths: $overlayImagePaths, currentImageIndex: $currentImageIndex, imageOpacity: $imageOpacity, imagePositionX: $imagePositionX, imagePositionY: $imagePositionY, imageScale: $imageScale, imageRotation: $imageRotation, showOverlayImage: $showOverlayImage, cameraPositionX: $cameraPositionX, cameraPositionY: $cameraPositionY, cameraScale: $cameraScale)';
+    return 'Project(id: $id, name: $name, createdAt: $createdAt, lastModified: $lastModified, overlayImages: $overlayImages, currentImageIndex: $currentImageIndex, imageOpacity: $imageOpacity, imagePositionX: $imagePositionX, imagePositionY: $imagePositionY, imageScale: $imageScale, imageRotation: $imageRotation, showOverlayImage: $showOverlayImage, cameraPositionX: $cameraPositionX, cameraPositionY: $cameraPositionY, cameraScale: $cameraScale)';
   }
 
   @override
@@ -157,7 +192,7 @@ class Project {
         other.name == name &&
         other.createdAt == createdAt &&
         other.lastModified == lastModified &&
-        _listEquals(other.overlayImagePaths, overlayImagePaths) &&
+        _listEquals(other.overlayImages, overlayImages) &&
         other.currentImageIndex == currentImageIndex &&
         other.imageOpacity == imageOpacity &&
         other.imagePositionX == imagePositionX &&
@@ -186,7 +221,7 @@ class Project {
         name.hashCode ^
         createdAt.hashCode ^
         lastModified.hashCode ^
-        overlayImagePaths.hashCode ^
+        overlayImages.hashCode ^
         currentImageIndex.hashCode ^
         imageOpacity.hashCode ^
         imagePositionX.hashCode ^
@@ -200,12 +235,21 @@ class Project {
   }
 
   // Getters de conveniência
-  bool get hasOverlayImage => overlayImagePaths.isNotEmpty;
+  bool get hasOverlayImage => overlayImages.isNotEmpty;
 
   String? get currentImagePath =>
-      hasOverlayImage && currentImageIndex < overlayImagePaths.length
-      ? overlayImagePaths[currentImageIndex]
+      hasOverlayImage && currentImageIndex < overlayImages.length
+      ? overlayImages[currentImageIndex].path
       : null;
+
+  OverlayImage? get currentImage =>
+      hasOverlayImage && currentImageIndex < overlayImages.length
+      ? overlayImages[currentImageIndex]
+      : null;
+
+  // Getter para compatibilidade (retorna lista de paths)
+  List<String> get overlayImagePaths =>
+      overlayImages.map((img) => img.path).toList();
 
   String get formattedCreatedAt {
     return '${createdAt.day.toString().padLeft(2, '0')}/${createdAt.month.toString().padLeft(2, '0')}/${createdAt.year}';

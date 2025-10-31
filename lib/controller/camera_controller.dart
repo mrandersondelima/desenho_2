@@ -23,18 +23,26 @@ class CameraOverlayController extends GetxController {
   RxBool isImageMoveButtonActive = false.obs;
   RxBool isCameraMoveButtonActive = false.obs;
 
-  // Lista de imagens sobrepostas
-  RxList<String> overlayImagePaths = <String>[].obs;
+  // Lista de imagens sobrepostas com títulos
+  RxList<OverlayImage> overlayImages = <OverlayImage>[].obs;
   RxInt currentImageIndex = 0.obs;
 
-  // Getter para compatibilidade com código existente
+  // Getters para compatibilidade com código existente
   String get selectedImagePath =>
-      overlayImagePaths.isNotEmpty &&
-          currentImageIndex.value < overlayImagePaths.length
-      ? overlayImagePaths[currentImageIndex.value]
+      overlayImages.isNotEmpty && currentImageIndex.value < overlayImages.length
+      ? overlayImages[currentImageIndex.value].path
       : '';
 
-  bool get hasOverlayImages => overlayImagePaths.isNotEmpty;
+  OverlayImage? get selectedImage =>
+      overlayImages.isNotEmpty && currentImageIndex.value < overlayImages.length
+      ? overlayImages[currentImageIndex.value]
+      : null;
+
+  bool get hasOverlayImages => overlayImages.isNotEmpty;
+
+  // Getter para compatibilidade (retorna lista de paths)
+  List<String> get overlayImagePaths =>
+      overlayImages.map((img) => img.path).toList();
   RxBool isMoveBarExpanded = false.obs;
   RxBool isOpacityBarExpanded = false.obs;
   RxBool isOpacitySwitchEnabled = true.obs; // Switch para controlar opacidade
@@ -237,10 +245,6 @@ class CameraOverlayController extends GetxController {
   }
 
   void toggleHideButton() {
-    // Desativa os outros botões
-    isMoveButtonActive.value = false;
-    isOpacityButtonActive.value = false;
-    isToolsButtonActive.value = false;
     // Alterna o estado do botão Esconder
     isHideButtonActive.value = !isHideButtonActive.value;
   }
@@ -256,10 +260,7 @@ class CameraOverlayController extends GetxController {
     // Fecha a barra de movimento quando a barra de opacidade for ativada
     if (isOpacityButtonActive.value) {
       isMoveBarExpanded.value = false;
-      isToolsBarExpanded.value = false;
-      isFlashBarExpanded.value = false;
-      isAngleBarExpanded.value = false;
-      isVisibilityBarExpanded.value = false;
+
       // Desativa também os botões secundários da barra de movimento
       isImageMoveButtonActive.value = false;
       isCameraMoveButtonActive.value = false;
@@ -350,7 +351,6 @@ class CameraOverlayController extends GetxController {
     // Se estiver ativando, fecha outras barras
     if (isVisibilityButtonActive.value) {
       isMoveBarExpanded.value = false;
-      isOpacityBarExpanded.value = false;
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
     }
@@ -453,26 +453,31 @@ class CameraOverlayController extends GetxController {
           final isCompatible = await _validateImageCompatibility(newImagePath);
 
           if (isCompatible) {
-            // Adiciona nova imagem à lista
-            overlayImagePaths.add(newImagePath);
-            currentImageIndex.value =
-                overlayImagePaths.length - 1; // Seleciona a nova imagem
+            // Pede título para a imagem
+            final title = await _promptForImageTitle();
+            if (title != null) {
+              // Adiciona nova imagem à lista com título
+              final newImage = OverlayImage(path: newImagePath, title: title);
+              overlayImages.add(newImage);
+              currentImageIndex.value =
+                  overlayImages.length - 1; // Seleciona a nova imagem
 
-            // Reset position and scale when new image is selected
-            imagePositionX.value = 0.0;
-            imagePositionY.value = 0.0;
-            imageScale.value = 1.0;
-            imageRotation.value = 0.0;
-            rotationTextController.text = '0';
+              // Reset position and scale when new image is selected
+              imagePositionX.value = 0.0;
+              imagePositionY.value = 0.0;
+              imageScale.value = 1.0;
+              imageRotation.value = 0.0;
+              rotationTextController.text = '0';
 
-            // Inicializa transparência com valor atual da opacidade
-            autoTransparencyValue.value = imageOpacity.value;
-            _maxTransparencyValue = imageOpacity.value;
+              // Inicializa transparência com valor atual da opacidade
+              autoTransparencyValue.value = imageOpacity.value;
+              _maxTransparencyValue = imageOpacity.value;
 
-            // Carrega dimensões da imagem
-            await _loadImageDimensions();
+              // Carrega dimensões da imagem
+              await _loadImageDimensions();
 
-            _autoSave();
+              _autoSave();
+            }
 
             Get.snackbar(
               'Imagem adicionada',
@@ -497,9 +502,38 @@ class CameraOverlayController extends GetxController {
     }
   }
 
+  // Método para solicitar título para imagem
+  Future<String?> _promptForImageTitle() async {
+    String title = '';
+    final result = await Get.defaultDialog<String>(
+      title: 'Título da Imagem',
+      content: TextField(
+        autofocus: true,
+        decoration: const InputDecoration(
+          hintText: 'Digite um título para a imagem',
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (value) => title = value,
+        onSubmitted: (value) {
+          title = value;
+          Get.back(result: value.isEmpty ? 'Sem título' : value);
+        },
+      ),
+      textConfirm: 'OK',
+      textCancel: 'Cancelar',
+      onConfirm: () {
+        Get.back(result: title.isEmpty ? 'Sem título' : title);
+      },
+      onCancel: () {
+        // Não precisa chamar Get.back() aqui, o GetX já fecha o diálogo
+      },
+    );
+    return result;
+  }
+
   // Métodos para gerenciar múltiplas imagens
   void selectImageByIndex(int index) {
-    if (index >= 0 && index < overlayImagePaths.length) {
+    if (index >= 0 && index < overlayImages.length) {
       currentImageIndex.value = index;
       _loadImageDimensions();
       _autoSave();
@@ -507,12 +541,12 @@ class CameraOverlayController extends GetxController {
   }
 
   void removeImageAtIndex(int index) {
-    if (index >= 0 && index < overlayImagePaths.length) {
-      overlayImagePaths.removeAt(index);
+    if (index >= 0 && index < overlayImages.length) {
+      overlayImages.removeAt(index);
 
       // Ajusta o índice atual se necessário
-      if (currentImageIndex.value >= overlayImagePaths.length) {
-        currentImageIndex.value = overlayImagePaths.length - 1;
+      if (currentImageIndex.value >= overlayImages.length) {
+        currentImageIndex.value = overlayImages.length - 1;
       }
       if (currentImageIndex.value < 0) {
         currentImageIndex.value = 0;
@@ -523,9 +557,96 @@ class CameraOverlayController extends GetxController {
   }
 
   void clearAllImages() {
-    overlayImagePaths.clear();
+    overlayImages.clear();
     currentImageIndex.value = 0;
     _autoSave();
+  }
+
+  // Move imagem para cima na lista (diminui índice)
+  void moveImageUp(int index) {
+    if (index > 0 && index < overlayImages.length) {
+      final image = overlayImages.removeAt(index);
+      overlayImages.insert(index - 1, image);
+
+      // Atualiza o índice atual se necessário
+      if (currentImageIndex.value == index) {
+        currentImageIndex.value = index - 1;
+      } else if (currentImageIndex.value == index - 1) {
+        currentImageIndex.value = index;
+      }
+
+      _autoSave();
+    }
+  }
+
+  // Move imagem para baixo na lista (aumenta índice)
+  void moveImageDown(int index) {
+    if (index >= 0 && index < overlayImages.length - 1) {
+      final image = overlayImages.removeAt(index);
+      overlayImages.insert(index + 1, image);
+
+      // Atualiza o índice atual se necessário
+      if (currentImageIndex.value == index) {
+        currentImageIndex.value = index + 1;
+      } else if (currentImageIndex.value == index + 1) {
+        currentImageIndex.value = index;
+      }
+
+      _autoSave();
+    }
+  }
+
+  // Edita o título de uma imagem
+  Future<void> editImageTitle(int index) async {
+    if (index >= 0 && index < overlayImages.length) {
+      final currentImage = overlayImages[index];
+      final newTitle = await _promptForImageTitleWithDefault(
+        currentImage.title,
+      );
+
+      if (newTitle != null && newTitle != currentImage.title) {
+        overlayImages[index] = currentImage.copyWith(title: newTitle);
+        _autoSave();
+
+        Get.snackbar(
+          'Título atualizado',
+          'Título da imagem atualizado com sucesso',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+      }
+    }
+  }
+
+  // Método para solicitar título com valor padrão
+  Future<String?> _promptForImageTitleWithDefault(String defaultTitle) async {
+    String title = defaultTitle;
+    final result = await Get.defaultDialog<String>(
+      title: 'Editar Título da Imagem',
+      content: TextField(
+        autofocus: true,
+        controller: TextEditingController(text: defaultTitle),
+        decoration: const InputDecoration(
+          hintText: 'Digite um título para a imagem',
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (value) => title = value,
+        onSubmitted: (value) {
+          title = value;
+          Get.back(result: value.isEmpty ? 'Sem título' : value);
+        },
+      ),
+      textConfirm: 'OK',
+      textCancel: 'Cancelar',
+      onConfirm: () {
+        Get.back(result: title.isEmpty ? 'Sem título' : title);
+      },
+      onCancel: () {
+        // Não precisa chamar Get.back() aqui, o GetX já fecha o diálogo
+      },
+    );
+    return result;
   }
 
   // Permite selecionar múltiplas imagens de uma vez
@@ -537,7 +658,7 @@ class CameraOverlayController extends GetxController {
       );
 
       if (result != null && result.files.isNotEmpty) {
-        List<String> validImages = [];
+        List<OverlayImage> validImages = [];
         List<String> invalidImages = [];
 
         // Valida cada imagem selecionada
@@ -547,7 +668,11 @@ class CameraOverlayController extends GetxController {
             final isCompatible = await _validateImageCompatibility(file.path!);
 
             if (isCompatible) {
-              validImages.add(file.path!);
+              // Pede título para cada imagem
+              final title = await _promptForImageTitle();
+              if (title != null) {
+                validImages.add(OverlayImage(path: file.path!, title: title));
+              }
             } else {
               invalidImages.add(file.name);
             }
@@ -556,12 +681,11 @@ class CameraOverlayController extends GetxController {
 
         // Adiciona apenas as imagens válidas
         if (validImages.isNotEmpty) {
-          overlayImagePaths.addAll(validImages);
+          overlayImages.addAll(validImages);
 
           // Seleciona a primeira nova imagem
-          if (overlayImagePaths.isNotEmpty) {
-            currentImageIndex.value =
-                overlayImagePaths.length - validImages.length;
+          if (overlayImages.isNotEmpty) {
+            currentImageIndex.value = overlayImages.length - validImages.length;
 
             // Reset das transformações para a primeira imagem
             imagePositionX.value = 0.0;
@@ -833,10 +957,10 @@ class CameraOverlayController extends GetxController {
     currentProject.value = projectToLoad;
 
     // Carrega as configurações do projeto
-    overlayImagePaths.value = projectToLoad.overlayImagePaths;
+    overlayImages.value = projectToLoad.overlayImages;
     currentImageIndex.value = projectToLoad.currentImageIndex;
 
-    if (overlayImagePaths.isNotEmpty) {
+    if (overlayImages.isNotEmpty) {
       // Carrega dimensões da imagem quando carrega projeto
       _loadImageDimensions();
     }
@@ -868,7 +992,7 @@ class CameraOverlayController extends GetxController {
 
       // Atualiza o projeto com as configurações atuais
       final updatedProject = currentProject.value!.copyWith(
-        overlayImagePaths: overlayImagePaths.toList(),
+        overlayImages: overlayImages.toList(),
         currentImageIndex: currentImageIndex.value,
         imageOpacity: imageOpacity.value,
         imagePositionX: imagePositionX.value,
