@@ -1071,6 +1071,38 @@ class CameraOverlayController extends GetxController {
     _autoSave();
   }
 
+  // Mostra modal de confirmação antes de resetar
+  Future<void> confirmAndResetImageTransform() async {
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Confirmar reinicialização'),
+        content: const Text(
+          'Tem certeza que deseja reiniciar todas as posições e transformações da imagem e câmera?\n\nEsta ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reiniciar'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+
+    // Se confirmado, executa o reset
+    if (confirmed == true) {
+      resetImageTransform();
+    }
+  }
+
   void resetImageTransform() {
     // Reset dos valores da imagem (_adjustMode*)
     _adjustModePositionX = 0.0;

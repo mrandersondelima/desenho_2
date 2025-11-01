@@ -180,7 +180,7 @@ class CameraOverlayScreen extends StatelessWidget {
                           label: 'Reiniciar',
                           isActive: false,
                           onPressed: () {
-                            controller.resetImageTransform();
+                            controller.confirmAndResetImageTransform();
                           },
                         ),
                         // Botão Ferramentas
