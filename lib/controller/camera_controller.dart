@@ -50,6 +50,7 @@ class CameraOverlayController extends GetxController {
   RxBool isToolsBarExpanded = false.obs; // Barra de ferramentas expandida
   RxBool isFlashBarExpanded = false.obs; // Barra do botão Piscar expandida
   RxBool isAngleBarExpanded = false.obs; // Barra do botão Ângulo expandida
+  RxBool isScaleBarExpanded = false.obs; // Barra do botão Escala expandida
   RxBool isVisibilityBarExpanded =
       false.obs; // Barra do botão Visualização expandida
 
@@ -57,6 +58,7 @@ class CameraOverlayController extends GetxController {
   RxBool isFlashButtonActive = false.obs;
   RxBool isIlluminationButtonActive = false.obs;
   RxBool isAngleButtonActive = false.obs;
+  RxBool isScaleButtonActive = false.obs;
   RxBool isVisibilityButtonActive = false.obs;
 
   RxDouble imageOpacity = 0.5.obs;
@@ -156,8 +158,9 @@ class CameraOverlayController extends GetxController {
     // Força salvamento antes de fechar
     forceSave();
 
-    // Cancela o timer de movimento se estiver ativo
+    // Cancela os timers se estiverem ativos
     _moveTimer?.cancel();
+    _scaleTimer?.cancel();
 
     cameraController.value?.dispose();
     rotationTextController.dispose();
@@ -279,6 +282,7 @@ class CameraOverlayController extends GetxController {
     if (isToolsButtonActive.value) {
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
+      isScaleBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
       isToolsBarExpanded.value = true;
     }
@@ -290,6 +294,8 @@ class CameraOverlayController extends GetxController {
       isIlluminationButtonActive.value = false;
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
+      isScaleBarExpanded.value = false;
+      isScaleButtonActive.value = false;
       isVisibilityBarExpanded.value = false;
       isAngleButtonActive.value = false;
       isVisibilityButtonActive.value = false;
@@ -300,6 +306,7 @@ class CameraOverlayController extends GetxController {
     // Desativa os outros botões da barra de ferramentas
     isIlluminationButtonActive.value = false;
     isAngleButtonActive.value = false;
+    isScaleButtonActive.value = false;
     isVisibilityButtonActive.value = false;
     // Alterna o estado do botão Piscar
     isFlashButtonActive.value = !isFlashButtonActive.value;
@@ -310,6 +317,7 @@ class CameraOverlayController extends GetxController {
     // Se estiver ativando, fecha outras barras
     if (isFlashButtonActive.value) {
       isAngleBarExpanded.value = false;
+      isScaleBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
   }
@@ -318,6 +326,7 @@ class CameraOverlayController extends GetxController {
     // Desativa os outros botões da barra de ferramentas
     isFlashButtonActive.value = false;
     isAngleButtonActive.value = false;
+    isScaleButtonActive.value = false;
     isVisibilityButtonActive.value = false;
     // Alterna o estado do botão Iluminação
     isIlluminationButtonActive.value = !isIlluminationButtonActive.value;
@@ -327,6 +336,7 @@ class CameraOverlayController extends GetxController {
     // Desativa os outros botões da barra de ferramentas
     isFlashButtonActive.value = false;
     isIlluminationButtonActive.value = false;
+    isScaleButtonActive.value = false;
     isVisibilityButtonActive.value = false;
     // Alterna o estado do botão Ângulo
     isAngleButtonActive.value = !isAngleButtonActive.value;
@@ -337,6 +347,30 @@ class CameraOverlayController extends GetxController {
     // Se estiver ativando, fecha outras barras
     if (isAngleButtonActive.value) {
       isFlashBarExpanded.value = false;
+      isScaleBarExpanded.value = false;
+      isVisibilityBarExpanded.value = false;
+    }
+  }
+
+  void toggleScaleButton() {
+    // Só permite ativar se "Mover Imagem" estiver ativo
+    if (!isImageMoveButtonActive.value) return;
+
+    // Desativa os outros botões da barra de ferramentas
+    isFlashButtonActive.value = false;
+    isIlluminationButtonActive.value = false;
+    isAngleButtonActive.value = false;
+    isVisibilityButtonActive.value = false;
+    // Alterna o estado do botão Escala
+    isScaleButtonActive.value = !isScaleButtonActive.value;
+
+    // Controla a expansão da barra do botão Escala
+    isScaleBarExpanded.value = isScaleButtonActive.value;
+
+    // Se estiver ativando, fecha outras barras
+    if (isScaleButtonActive.value) {
+      isFlashBarExpanded.value = false;
+      isAngleBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
   }
@@ -346,6 +380,7 @@ class CameraOverlayController extends GetxController {
     isFlashButtonActive.value = false;
     isIlluminationButtonActive.value = false;
     isAngleButtonActive.value = false;
+    isScaleButtonActive.value = false;
     // Alterna o estado do botão Visualização
     isVisibilityButtonActive.value = !isVisibilityButtonActive.value;
 
@@ -357,6 +392,7 @@ class CameraOverlayController extends GetxController {
       isMoveBarExpanded.value = false;
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
+      isScaleBarExpanded.value = false;
     }
   }
 
@@ -1171,6 +1207,37 @@ class CameraOverlayController extends GetxController {
     _moveTimer?.cancel();
     _moveTimer = null;
     _autoSave(); // Salva quando parar de mover
+  }
+
+  // Controles de escala para aumentar/diminuir a imagem
+  Timer? _scaleTimer;
+  static const double _scaleSpeed = 0.01; // incremento de escala por frame
+  static const Duration _scaleInterval = Duration(milliseconds: 16); // ~60fps
+
+  void startScalingImage(bool increase) {
+    // Só permite se "Mover Imagem" estiver ativo
+    if (!isImageMoveButtonActive.value) return;
+
+    // Cancela qualquer escala anterior
+    _scaleTimer?.cancel();
+
+    // Inicia a escala contínua
+    _scaleTimer = Timer.periodic(_scaleInterval, (timer) {
+      if (increase) {
+        imageScale.value += _scaleSpeed;
+      } else {
+        // Não permite escala menor que 0.1
+        if (imageScale.value > 0.1) {
+          imageScale.value -= _scaleSpeed;
+        }
+      }
+    });
+  }
+
+  void stopScalingImage() {
+    _scaleTimer?.cancel();
+    _scaleTimer = null;
+    _autoSave(); // Salva quando parar de escalar
   }
 
   // Carrega as dimensões da imagem selecionada

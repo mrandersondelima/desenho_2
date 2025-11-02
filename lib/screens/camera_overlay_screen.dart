@@ -225,6 +225,15 @@ class CameraOverlayScreen extends StatelessWidget {
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             children: [
+                              // Botão Camadas
+                              _buildToolbarButton(
+                                label: 'Camadas',
+                                isActive:
+                                    controller.isVisibilityButtonActive.value,
+                                onPressed: () {
+                                  controller.toggleVisibilityButton();
+                                },
+                              ),
                               // Botão Piscar
                               _buildToolbarButton(
                                 label: 'Piscar',
@@ -252,13 +261,11 @@ class CameraOverlayScreen extends StatelessWidget {
                                 },
                               ),
 
-                              // Botão Camadas
                               _buildToolbarButton(
-                                label: 'Camadas',
-                                isActive:
-                                    controller.isVisibilityButtonActive.value,
+                                label: 'Escala',
+                                isActive: controller.isScaleButtonActive.value,
                                 onPressed: () {
-                                  controller.toggleVisibilityButton();
+                                  controller.toggleScaleButton();
                                 },
                               ),
                             ],
@@ -797,6 +804,111 @@ class CameraOverlayScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(),
+          ),
+
+          // Barra do botão Escala - aparece abaixo da barra de ângulo
+          Obx(
+            () => controller.areControlsVisible.value
+                ? Visibility(
+                    visible: controller.isScaleBarExpanded.value,
+                    child: Positioned(
+                      top:
+                          90, // 50 (barra principal) + 40 (barra secundária) + 40 (barra piscar) + 40 (barra ângulo) + 40 (barra escala)
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Botão diminuir (-)
+                                GestureDetector(
+                                  onTapDown: (_) =>
+                                      controller.startScalingImage(false),
+                                  onTapUp: (_) => controller.stopScalingImage(),
+                                  onTapCancel: () =>
+                                      controller.stopScalingImage(),
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.red,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.remove,
+                                      color: Colors.red,
+                                      size: 32,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 10),
+
+                                // Texto indicador
+                                Obx(
+                                  () => Text(
+                                    '${(controller.imageScale.value * 100).toStringAsFixed(0)}%',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 10),
+
+                                // Botão aumentar (+)
+                                GestureDetector(
+                                  onTapDown: (_) =>
+                                      controller.startScalingImage(true),
+                                  onTapUp: (_) => controller.stopScalingImage(),
+                                  onTapCancel: () =>
+                                      controller.stopScalingImage(),
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.green,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.add,
+                                      color: Colors.green,
+                                      size: 32,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
