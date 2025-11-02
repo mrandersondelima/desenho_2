@@ -686,7 +686,7 @@ class CameraOverlayScreen extends StatelessWidget {
                 : Container(),
           ),
 
-          // Barra do botão Ângulo deslizante (controles de rotação) - aparece abaixo da barra de ferramentas
+          // Barra do botão Ângulo - aparece abaixo da barra de ferramentas
           Obx(
             () => controller.areControlsVisible.value
                 ? Visibility(
@@ -698,8 +698,7 @@ class CameraOverlayScreen extends StatelessWidget {
                       right: 0,
                       child: SafeArea(
                         child: Container(
-                          height:
-                              100, // Altura maior para acomodar slider e input
+                          height: 40,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border(
@@ -711,99 +710,84 @@ class CameraOverlayScreen extends StatelessWidget {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                              vertical: 8.0,
+                              horizontal: 16.0,
                             ),
-                            child: Column(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Slider de rotação
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Slider(
-                                        value: controller.imageRotation.value,
-                                        min: 0.0,
-                                        max: 360.0,
-                                        activeColor: Colors.blue,
-                                        inactiveColor: Colors.grey,
-                                        onChanged: controller.updateRotation,
+                                // Botão diminuir (-)
+                                GestureDetector(
+                                  onTapDown: (_) =>
+                                      controller.startRotatingImage(false),
+                                  onTapUp: (_) =>
+                                      controller.stopRotatingImage(),
+                                  onTapCancel: () =>
+                                      controller.stopRotatingImage(),
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.orange,
+                                        width: 2,
                                       ),
                                     ),
-                                    Text(
-                                      '${controller.imageRotation.value.round()}°',
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    child: const Icon(
+                                      Icons.remove,
+                                      color: Colors.orange,
+                                      size: 32,
                                     ),
-                                  ],
+                                  ),
                                 ),
-                                // Input de ângulo
-                                Row(
-                                  children: [
-                                    const Text(
-                                      'Ângulo:',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Container(
-                                        height: 30,
-                                        child: TextField(
-                                          controller:
-                                              controller.rotationTextController,
-                                          keyboardType: TextInputType.number,
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 14,
-                                          ),
-                                          decoration: InputDecoration(
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 4,
-                                                ),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              borderSide: const BorderSide(
-                                                color: Colors.blue,
-                                              ),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              borderSide: const BorderSide(
-                                                color: Colors.blue,
-                                                width: 1,
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              borderSide: const BorderSide(
-                                                color: Colors.blue,
-                                                width: 2,
-                                              ),
-                                            ),
-                                            suffixText: '°',
-                                            suffixStyle: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          onSubmitted:
-                                              controller.updateRotationFromText,
-                                          onChanged:
-                                              controller.updateRotationFromText,
+
+                                const SizedBox(width: 24),
+
+                                // Texto indicador
+                                Obx(
+                                  () => Container(
+                                    width: 70,
+                                    alignment: Alignment.center,
+                                    child: FittedBox(
+                                      child: Text(
+                                        '${(controller.imageRotation.value * 57.2958).toPrecision(2)}°',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 24),
+
+                                // Botão aumentar (+)
+                                GestureDetector(
+                                  onTapDown: (_) =>
+                                      controller.startRotatingImage(true),
+                                  onTapUp: (_) =>
+                                      controller.stopRotatingImage(),
+                                  onTapCancel: () =>
+                                      controller.stopRotatingImage(),
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.blue,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.add,
+                                      color: Colors.blue,
+                                      size: 32,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

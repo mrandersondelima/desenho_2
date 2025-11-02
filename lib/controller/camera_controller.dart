@@ -161,6 +161,7 @@ class CameraOverlayController extends GetxController {
     // Cancela os timers se estiverem ativos
     _moveTimer?.cancel();
     _scaleTimer?.cancel();
+    _rotationTimer?.cancel();
 
     cameraController.value?.dispose();
     rotationTextController.dispose();
@@ -1211,7 +1212,7 @@ class CameraOverlayController extends GetxController {
 
   // Controles de escala para aumentar/diminuir a imagem
   Timer? _scaleTimer;
-  static const double _scaleSpeed = 0.01; // incremento de escala por frame
+  static const double _scaleSpeed = 0.001; // incremento de escala por frame
   static const Duration _scaleInterval = Duration(milliseconds: 16); // ~60fps
 
   void startScalingImage(bool increase) {
@@ -1238,6 +1239,52 @@ class CameraOverlayController extends GetxController {
     _scaleTimer?.cancel();
     _scaleTimer = null;
     _autoSave(); // Salva quando parar de escalar
+  }
+
+  // Controles de rotação para aumentar/diminuir o ângulo da imagem
+  Timer? _rotationTimer;
+  static const double _rotationSpeed = 0.01; // 1 grau por frame
+  static const Duration _rotationInterval = Duration(
+    milliseconds: 16,
+  ); // ~60fps
+
+  void startRotatingImage(bool increase) {
+    // Só permite se "Mover Imagem" estiver ativo
+    if (!isImageMoveButtonActive.value) return;
+
+    // Cancela qualquer rotação anterior
+    _rotationTimer?.cancel();
+
+    // Inicia a rotação contínua
+    _rotationTimer = Timer.periodic(_rotationInterval, (timer) {
+      double newRotation;
+      if (increase) {
+        newRotation = imageRotation.value + _rotationSpeed;
+
+        print('Incrementando rotação: $newRotation');
+        // Se passar de 360, volta para 0
+        if (newRotation >= 6.28319) {
+          newRotation = 6.28319;
+          _rotationTimer?.cancel();
+        }
+      } else {
+        newRotation = imageRotation.value - _rotationSpeed;
+        // Se ficar abaixo de 0, volta para 360
+        if (newRotation < 0) {
+          newRotation = 0;
+          _rotationTimer?.cancel();
+        }
+      }
+      imageRotation.value = newRotation;
+      print('Rotação: $newRotation');
+      rotationTextController.text = (newRotation * 100.0).toString();
+    });
+  }
+
+  void stopRotatingImage() {
+    _rotationTimer?.cancel();
+    _rotationTimer = null;
+    _autoSave(); // Salva quando parar de rotacionar
   }
 
   // Carrega as dimensões da imagem selecionada
