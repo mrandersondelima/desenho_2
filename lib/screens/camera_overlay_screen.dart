@@ -548,27 +548,29 @@ class CameraOverlayScreen extends StatelessWidget {
                 bottom: controller.isMoveBarExpanded.value ? 50 : -30,
                 left: 0,
                 right: 0,
-                child: Container(
-                  height: 40,
-                  decoration: const BoxDecoration(color: Colors.white),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildToolbarButton(
-                        label: "Imagem",
-                        isActive: controller.isImageMoveButtonActive.value,
-                        onPressed: () {
-                          controller.toggleMoveImageButton();
-                        },
-                      ),
-                      _buildToolbarButton(
-                        label: "Câmera",
-                        isActive: controller.isCameraMoveButtonActive.value,
-                        onPressed: () {
-                          controller.toggleMoveCameraButton();
-                        },
-                      ),
-                    ],
+                child: SafeArea(
+                  child: Container(
+                    height: 40,
+                    decoration: const BoxDecoration(color: Colors.white),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildToolbarButton(
+                          label: "Imagem",
+                          isActive: controller.isImageMoveButtonActive.value,
+                          onPressed: () {
+                            controller.toggleMoveImageButton();
+                          },
+                        ),
+                        _buildToolbarButton(
+                          label: "Câmera",
+                          isActive: controller.isCameraMoveButtonActive.value,
+                          onPressed: () {
+                            controller.toggleMoveCameraButton();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -585,39 +587,41 @@ class CameraOverlayScreen extends StatelessWidget {
                 bottom: controller.isOpacityBarExpanded.value ? 50 : -30,
                 left: 0,
                 right: 0,
-                child: Container(
-                  height: 40,
-                  decoration: const BoxDecoration(color: Colors.white),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Slider(
-                            value: controller.imageOpacity.value,
-                            min: 0.0,
-                            max: 1.0,
+                child: SafeArea(
+                  child: Container(
+                    height: 40,
+                    decoration: const BoxDecoration(color: Colors.white),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Slider(
+                              value: controller.imageOpacity.value,
+                              min: 0.0,
+                              max: 1.0,
+                              activeColor: Colors.blue,
+                              inactiveColor: Colors.grey,
+                              onChanged: controller.updateImageOpacity,
+                            ),
+                          ),
+                          Text(
+                            '${(controller.imageOpacity.value * 100).round()}%',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: controller.isOpacitySwitchEnabled.value,
+                            onChanged: (value) {
+                              controller.toggleOverlayVisibility(value);
+                              controller.isOpacitySwitchEnabled.value = value;
+                            },
                             activeColor: Colors.blue,
-                            inactiveColor: Colors.grey,
-                            onChanged: controller.updateImageOpacity,
                           ),
-                        ),
-                        Text(
-                          '${(controller.imageOpacity.value * 100).round()}%',
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Switch.adaptive(
-                          value: controller.isOpacitySwitchEnabled.value,
-                          onChanged: (value) {
-                            controller.toggleOverlayVisibility(value);
-                            controller.isOpacitySwitchEnabled.value = value;
-                          },
-                          activeColor: Colors.blue,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -912,132 +916,134 @@ class CameraOverlayScreen extends StatelessWidget {
                 ? Positioned(
                     bottom: 100, // Logo acima da barra de ferramentas inferior
                     right: 20,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(60),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          // Seta para cima
-                          Positioned(
-                            top: 0,
-                            left: 40,
-                            child: GestureDetector(
-                              onTapDown: (_) =>
-                                  controller.startMovingImage('up'),
-                              onTapUp: (_) => controller.stopMovingImage(),
-                              onTapCancel: () => controller.stopMovingImage(),
+                    child: SafeArea(
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(60),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            // Seta para cima
+                            Positioned(
+                              top: 0,
+                              left: 40,
+                              child: GestureDetector(
+                                onTapDown: (_) =>
+                                    controller.startMovingImage('up'),
+                                onTapUp: (_) => controller.stopMovingImage(),
+                                onTapCancel: () => controller.stopMovingImage(),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_upward,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Seta para baixo
+                            Positioned(
+                              bottom: 0,
+                              left: 40,
+                              child: GestureDetector(
+                                onTapDown: (_) =>
+                                    controller.startMovingImage('down'),
+                                onTapUp: (_) => controller.stopMovingImage(),
+                                onTapCancel: () => controller.stopMovingImage(),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_downward,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Seta para esquerda
+                            Positioned(
+                              top: 40,
+                              left: 0,
+                              child: GestureDetector(
+                                onTapDown: (_) =>
+                                    controller.startMovingImage('left'),
+                                onTapUp: (_) => controller.stopMovingImage(),
+                                onTapCancel: () => controller.stopMovingImage(),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_back,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Seta para direita
+                            Positioned(
+                              top: 40,
+                              right: 0,
+                              child: GestureDetector(
+                                onTapDown: (_) =>
+                                    controller.startMovingImage('right'),
+                                onTapUp: (_) => controller.stopMovingImage(),
+                                onTapCancel: () => controller.stopMovingImage(),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_forward,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Centro (opcional - pode ser usado para centralizar)
+                            Positioned(
+                              top: 40,
+                              left: 40,
                               child: Container(
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.8),
+                                  color: Colors.grey.withOpacity(0.3),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
-                                  Icons.arrow_upward,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
                               ),
                             ),
-                          ),
-                          // Seta para baixo
-                          Positioned(
-                            bottom: 0,
-                            left: 40,
-                            child: GestureDetector(
-                              onTapDown: (_) =>
-                                  controller.startMovingImage('down'),
-                              onTapUp: (_) => controller.stopMovingImage(),
-                              onTapCancel: () => controller.stopMovingImage(),
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.8),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_downward,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Seta para esquerda
-                          Positioned(
-                            top: 40,
-                            left: 0,
-                            child: GestureDetector(
-                              onTapDown: (_) =>
-                                  controller.startMovingImage('left'),
-                              onTapUp: (_) => controller.stopMovingImage(),
-                              onTapCancel: () => controller.stopMovingImage(),
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.8),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_back,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Seta para direita
-                          Positioned(
-                            top: 40,
-                            right: 0,
-                            child: GestureDetector(
-                              onTapDown: (_) =>
-                                  controller.startMovingImage('right'),
-                              onTapUp: (_) => controller.stopMovingImage(),
-                              onTapCancel: () => controller.stopMovingImage(),
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.8),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_forward,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Centro (opcional - pode ser usado para centralizar)
-                          Positioned(
-                            top: 40,
-                            left: 40,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.3),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   )
@@ -1051,52 +1057,55 @@ class CameraOverlayScreen extends StatelessWidget {
             right: 0,
             child: Obx(
               () => controller.areControlsVisible.value
-                  ? Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          top: BorderSide(color: Colors.grey[300]!, width: 1),
+                  ? SafeArea(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            top: BorderSide(color: Colors.grey[300]!, width: 1),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Botão Mover
-                          Obx(
-                            () => _buildToolbarButton(
-                              label: 'Mover',
-                              isActive: controller.isMoveButtonActive.value,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Botão Mover
+                            Obx(
+                              () => _buildToolbarButton(
+                                label: 'Mover',
+                                isActive: controller.isMoveButtonActive.value,
+                                onPressed: () {
+                                  controller.toggleMoveButton();
+                                  controller.isMoveBarExpanded.value =
+                                      !controller.isMoveBarExpanded.value;
+                                },
+                              ),
+                            ),
+
+                            // Botão Esconder
+                            _buildToolbarButton(
+                              label: 'Esconder',
                               onPressed: () {
-                                controller.toggleMoveButton();
-                                controller.isMoveBarExpanded.value =
-                                    !controller.isMoveBarExpanded.value;
+                                controller.toggleHideButton();
+                                controller.toggleVisibility();
                               },
                             ),
-                          ),
 
-                          // Botão Esconder
-                          _buildToolbarButton(
-                            label: 'Esconder',
-                            onPressed: () {
-                              controller.toggleHideButton();
-                              controller.toggleVisibility();
-                            },
-                          ),
-
-                          // Botão Opacidade
-                          Obx(
-                            () => _buildToolbarButton(
-                              label: 'Opacidade',
-                              isActive: controller.isOpacityButtonActive.value,
-                              onPressed: () {
-                                controller.toggleOpacityButton();
-                                controller.isOpacityBarExpanded.value =
-                                    !controller.isOpacityBarExpanded.value;
-                              },
+                            // Botão Opacidade
+                            Obx(
+                              () => _buildToolbarButton(
+                                label: 'Opacidade',
+                                isActive:
+                                    controller.isOpacityButtonActive.value,
+                                onPressed: () {
+                                  controller.toggleOpacityButton();
+                                  controller.isOpacityBarExpanded.value =
+                                      !controller.isOpacityBarExpanded.value;
+                                },
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     )
                   : const SizedBox.shrink(),
