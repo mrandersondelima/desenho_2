@@ -808,6 +808,146 @@ class CameraOverlayScreen extends StatelessWidget {
                 : Container(),
           ),
 
+          // Controle direcional - aparece quando "Mover Imagem" está ativo
+          Obx(
+            () =>
+                controller.isImageMoveButtonActive.value &&
+                    controller.areControlsVisible.value
+                ? Positioned(
+                    bottom: 100, // Logo acima da barra de ferramentas inferior
+                    right: 20,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(60),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          // Seta para cima
+                          Positioned(
+                            top: 0,
+                            left: 40,
+                            child: GestureDetector(
+                              onTapDown: (_) =>
+                                  controller.startMovingImage('up'),
+                              onTapUp: (_) => controller.stopMovingImage(),
+                              onTapCancel: () => controller.stopMovingImage(),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_upward,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Seta para baixo
+                          Positioned(
+                            bottom: 0,
+                            left: 40,
+                            child: GestureDetector(
+                              onTapDown: (_) =>
+                                  controller.startMovingImage('down'),
+                              onTapUp: (_) => controller.stopMovingImage(),
+                              onTapCancel: () => controller.stopMovingImage(),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_downward,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Seta para esquerda
+                          Positioned(
+                            top: 40,
+                            left: 0,
+                            child: GestureDetector(
+                              onTapDown: (_) =>
+                                  controller.startMovingImage('left'),
+                              onTapUp: (_) => controller.stopMovingImage(),
+                              onTapCancel: () => controller.stopMovingImage(),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Seta para direita
+                          Positioned(
+                            top: 40,
+                            right: 0,
+                            child: GestureDetector(
+                              onTapDown: (_) =>
+                                  controller.startMovingImage('right'),
+                              onTapUp: (_) => controller.stopMovingImage(),
+                              onTapCancel: () => controller.stopMovingImage(),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_forward,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Centro (opcional - pode ser usado para centralizar)
+                          Positioned(
+                            top: 40,
+                            left: 40,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.3),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Container(),
+          ),
+
           // Barra de ferramentas inferior
           Positioned(
             bottom: 0,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
@@ -154,6 +155,9 @@ class CameraOverlayController extends GetxController {
   void onClose() {
     // Força salvamento antes de fechar
     forceSave();
+
+    // Cancela o timer de movimento se estiver ativo
+    _moveTimer?.cancel();
 
     cameraController.value?.dispose();
     rotationTextController.dispose();
@@ -1133,6 +1137,40 @@ class CameraOverlayController extends GetxController {
     _maxTransparencyValue = 0.5;
 
     _autoSave();
+  }
+
+  // Controles direcionais para mover a imagem
+  Timer? _moveTimer;
+  static const double _moveSpeed = 0.1; // pixels por frame
+  static const Duration _moveInterval = Duration(milliseconds: 16); // ~60fps
+
+  void startMovingImage(String direction) {
+    // Cancela qualquer movimento anterior
+    _moveTimer?.cancel();
+
+    // Inicia o movimento contínuo
+    _moveTimer = Timer.periodic(_moveInterval, (timer) {
+      switch (direction) {
+        case 'up':
+          imagePositionY.value -= _moveSpeed;
+          break;
+        case 'down':
+          imagePositionY.value += _moveSpeed;
+          break;
+        case 'left':
+          imagePositionX.value -= _moveSpeed;
+          break;
+        case 'right':
+          imagePositionX.value += _moveSpeed;
+          break;
+      }
+    });
+  }
+
+  void stopMovingImage() {
+    _moveTimer?.cancel();
+    _moveTimer = null;
+    _autoSave(); // Salva quando parar de mover
   }
 
   // Carrega as dimensões da imagem selecionada
