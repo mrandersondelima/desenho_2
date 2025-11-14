@@ -581,6 +581,34 @@ class CameraOverlayController extends GetxController {
     }
   }
 
+  // Navega para a camada anterior
+  void goToPreviousLayer() {
+    if (overlayImages.isEmpty) return;
+
+    if (currentImageIndex.value > 0) {
+      currentImageIndex.value--;
+    } else {
+      // Se estiver na primeira, vai para a última (comportamento circular)
+      currentImageIndex.value = overlayImages.length - 1;
+    }
+    _loadImageDimensions();
+    _autoSave();
+  }
+
+  // Navega para a próxima camada
+  void goToNextLayer() {
+    if (overlayImages.isEmpty) return;
+
+    if (currentImageIndex.value < overlayImages.length - 1) {
+      currentImageIndex.value++;
+    } else {
+      // Se estiver na última, volta para a primeira (comportamento circular)
+      currentImageIndex.value = 0;
+    }
+    _loadImageDimensions();
+    _autoSave();
+  }
+
   void removeImageAtIndex(int index) {
     if (index >= 0 && index < overlayImages.length) {
       overlayImages.removeAt(index);

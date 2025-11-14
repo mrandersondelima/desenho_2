@@ -1050,6 +1050,97 @@ class CameraOverlayScreen extends StatelessWidget {
                 : Container(),
           ),
 
+          // Navegação entre camadas - aparece no modo desenho quando controles estão ocultos
+          Obx(
+            () =>
+                controller.isDrawingMode &&
+                    !controller.areControlsVisible.value &&
+                    controller.overlayImages.length > 1
+                ? Positioned(
+                    bottom:
+                        20, // Mais para baixo já que controles estão ocultos
+                    left: 0,
+                    right: 0,
+                    child: SafeArea(
+                      child: Container(
+                        height: 60,
+                        color: Colors.black.withOpacity(0.3),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Seta esquerda (camada anterior)
+                            GestureDetector(
+                              onTap: () => controller.goToPreviousLayer(),
+                              child: Container(
+                                width: 80,
+                                height: 62,
+                                color: Colors.transparent,
+                                child: const Icon(
+                                  Icons.arrow_back_ios,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                              ),
+                            ),
+
+                            // Indicador da camada atual
+                            Obx(
+                              () => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text(
+                                      'Camada',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+
+                                    Text(
+                                      '${controller.currentImageIndex.value + 1} / ${controller.overlayImages.length}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Seta direita (próxima camada)
+                            GestureDetector(
+                              onTap: () => controller.goToNextLayer(),
+                              child: Container(
+                                width: 80,
+                                height: 60,
+                                color: Colors.transparent,
+                                child: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(),
+          ),
+
           // Barra de ferramentas inferior
           Positioned(
             bottom: 0,
