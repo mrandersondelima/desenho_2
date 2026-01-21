@@ -53,11 +53,14 @@ class CameraOverlayController extends GetxController {
   RxBool isScaleBarExpanded = false.obs; // Barra do botão Escala expandida
   RxBool isVisibilityBarExpanded =
       false.obs; // Barra do botão Visualização expandida
+  RxBool isRecordingBarExpanded =
+      false.obs; // Barra do botão Gravação expandida
 
   // Estados dos botões da barra de ferramentas
   RxBool isFlashButtonActive = false.obs;
   RxBool isIlluminationButtonActive = false.obs;
   RxBool isAngleButtonActive = false.obs;
+  RxBool isRecordingButtonActive = false.obs;
   RxBool isScaleButtonActive = false.obs;
   RxBool isVisibilityButtonActive = false.obs;
 
@@ -107,6 +110,12 @@ class CameraOverlayController extends GetxController {
 
   // Escala adicional da câmera para quando zoom da imagem < 1.0
   RxDouble cameraScale = 1.0.obs;
+
+  // Variáveis de gravação de vídeo
+  RxBool isRecording = false.obs;
+  RxString recordingDurationDisplay = '00:00:00'.obs;
+  Timer? _recordingTimer;
+  int _recordingSeconds = 0;
 
   // Projeto atual
   Rx<Project?> currentProject = Rx<Project?>(null);
@@ -308,6 +317,7 @@ class CameraOverlayController extends GetxController {
     isIlluminationButtonActive.value = false;
     isAngleButtonActive.value = false;
     isScaleButtonActive.value = false;
+    isRecordingButtonActive.value = false;
     isVisibilityButtonActive.value = false;
     // Alterna o estado do botão Piscar
     isFlashButtonActive.value = !isFlashButtonActive.value;
@@ -315,10 +325,12 @@ class CameraOverlayController extends GetxController {
     // Controla a expansão da barra do botão Piscar
     isFlashBarExpanded.value = isFlashButtonActive.value;
 
-    // Se estiver ativando, fecha outras barras
+    // Se estiver ativando, fecha outras barras na mesma altura
     if (isFlashButtonActive.value) {
       isAngleBarExpanded.value = false;
+      isRecordingBarExpanded.value = false;
       isScaleBarExpanded.value = false;
+      isVisibilityBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
   }
@@ -338,6 +350,7 @@ class CameraOverlayController extends GetxController {
     isFlashButtonActive.value = false;
     isIlluminationButtonActive.value = false;
     isScaleButtonActive.value = false;
+    isRecordingButtonActive.value = false;
     isVisibilityButtonActive.value = false;
     // Alterna o estado do botão Ângulo
     isAngleButtonActive.value = !isAngleButtonActive.value;
@@ -345,9 +358,10 @@ class CameraOverlayController extends GetxController {
     // Controla a expansão da barra do botão Ângulo
     isAngleBarExpanded.value = isAngleButtonActive.value;
 
-    // Se estiver ativando, fecha outras barras
+    // Se estiver ativando, fecha outras barras na mesma altura
     if (isAngleButtonActive.value) {
       isFlashBarExpanded.value = false;
+      isRecordingBarExpanded.value = false;
       isScaleBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
@@ -361,6 +375,7 @@ class CameraOverlayController extends GetxController {
     isFlashButtonActive.value = false;
     isIlluminationButtonActive.value = false;
     isAngleButtonActive.value = false;
+    isRecordingButtonActive.value = false;
     isVisibilityButtonActive.value = false;
     // Alterna o estado do botão Escala
     isScaleButtonActive.value = !isScaleButtonActive.value;
@@ -368,11 +383,34 @@ class CameraOverlayController extends GetxController {
     // Controla a expansão da barra do botão Escala
     isScaleBarExpanded.value = isScaleButtonActive.value;
 
-    // Se estiver ativando, fecha outras barras
+    // Se estiver ativando, fecha outras barras de outra altura
     if (isScaleButtonActive.value) {
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
+      isRecordingBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
+    }
+  }
+
+  void toggleRecordingButton() {
+    // Desativa os outros botões da barra de ferramentas
+    isFlashButtonActive.value = false;
+    isIlluminationButtonActive.value = false;
+    isAngleButtonActive.value = false;
+    isScaleButtonActive.value = false;
+    isVisibilityButtonActive.value = false;
+    // Alterna o estado do botão Gravação
+    isRecordingButtonActive.value = !isRecordingButtonActive.value;
+
+    // Controla a expansão da barra do botão Gravação
+    isRecordingBarExpanded.value = isRecordingButtonActive.value;
+
+    // Se estiver ativando, fecha outras barras na mesma altura
+    if (isRecordingButtonActive.value) {
+      isFlashBarExpanded.value = false;
+      isAngleBarExpanded.value = false;
+      isVisibilityBarExpanded.value = false;
+      isScaleBarExpanded.value = false;
     }
   }
 
@@ -1747,5 +1785,160 @@ class CameraOverlayController extends GetxController {
     }
 
     _autoSave();
+  }
+
+  // Inicia a gravação de vídeo
+  Future<void> startVideoRecording() async {
+    if (cameraController.value == null || !isCameraInitialized.value) {
+      Get.snackbar('Erro', 'Câmera não inicializada');
+      return;
+    }
+
+    try {
+      // Verifica permissão de câmera
+      final cameraStatus = await Permission.camera.request();
+      if (!cameraStatus.isGranted) {
+        Get.snackbar('Erro', 'Permissão de câmera negada');
+        return;
+      }
+
+      // Verifica permissão de armazenamento (necessária para salvar na galeria)
+      if (Platform.isAndroid) {
+        final storageStatus = await Permission.storage.request();
+        if (!storageStatus.isGranted) {
+          // Tenta permissão de mídia (Android 13+)
+          final mediaStatus = await Permission.photos.request();
+          if (!mediaStatus.isGranted) {
+            print('Aviso: Permissão de armazenamento não concedida');
+          }
+        }
+      }
+
+      // Inicia a gravação
+      await cameraController.value!.startVideoRecording();
+      isRecording.value = true;
+      _recordingSeconds = 0;
+      recordingDurationDisplay.value = '00:00:00';
+
+      // Inicia timer para atualizar duração
+      _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        _recordingSeconds++;
+        final hours = _recordingSeconds ~/ 3600;
+        final minutes = (_recordingSeconds % 3600) ~/ 60;
+        final seconds = _recordingSeconds % 60;
+        recordingDurationDisplay.value =
+            '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+      });
+
+      Get.snackbar(
+        'Gravação iniciada',
+        'Gravando vídeo...',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar('Erro', 'Erro ao iniciar gravação: $e');
+      isRecording.value = false;
+    }
+  }
+
+  // Para a gravação de vídeo e salva na galeria
+  Future<void> stopVideoRecording() async {
+    if (cameraController.value == null || !isRecording.value) {
+      return;
+    }
+
+    try {
+      // Para o timer
+      _recordingTimer?.cancel();
+
+      // Para a gravação
+      final XFile videoFile = await cameraController.value!
+          .stopVideoRecording();
+      isRecording.value = false;
+
+      // Salva o vídeo na galeria do celular
+      await _saveVideoToGallery(videoFile.path);
+
+      Get.snackbar(
+        'Sucesso',
+        'Vídeo salvo na galeria',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar('Erro', 'Erro ao parar gravação: $e');
+      isRecording.value = false;
+    }
+  }
+
+  // Salva o vídeo na galeria do celular
+  Future<void> _saveVideoToGallery(String videoPath) async {
+    try {
+      final File videoFile = File(videoPath);
+
+      // Verifica se o arquivo existe
+      if (!videoFile.existsSync()) {
+        print('✗ Arquivo de vídeo não encontrado: $videoPath');
+        Get.snackbar('Erro', 'Vídeo não encontrado');
+        return;
+      }
+
+      if (Platform.isAndroid) {
+        try {
+          // Obtém o diretório público DCIM/Camera
+          final String fileName =
+              'VIDEO_${DateTime.now().millisecondsSinceEpoch}.mp4';
+          final String dcimPath = '/storage/emulated/0/DCIM/Camera/$fileName';
+          final File destFile = File(dcimPath);
+
+          // Copia o arquivo para DCIM/Camera
+          await videoFile.copy(destFile.path);
+
+          print('✓ Vídeo salvo em: ${destFile.path}');
+          Get.snackbar(
+            'Sucesso',
+            'Vídeo salvo na galeria',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 2),
+          );
+        } catch (e) {
+          print('✗ Erro ao salvar vídeo: $e');
+          Get.snackbar(
+            'Erro',
+            'Erro ao salvar vídeo: $e',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      } else if (Platform.isIOS) {
+        try {
+          // No iOS, copia para Documents (que aparece na Fotos)
+          final appDir = await Directory.systemTemp.create(recursive: true);
+          final fileName = 'VIDEO_${DateTime.now().millisecondsSinceEpoch}.mp4';
+          final copyPath = '${appDir.path}/$fileName';
+          await videoFile.copy(copyPath);
+
+          print('✓ Vídeo salvo em: $copyPath');
+          Get.snackbar(
+            'Sucesso',
+            'Vídeo pronto para salvar',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 2),
+          );
+        } catch (e) {
+          print('✗ Erro ao salvar vídeo: $e');
+          Get.snackbar(
+            'Erro',
+            'Erro ao salvar vídeo: $e',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      }
+    } catch (e) {
+      print('✗ Erro geral ao salvar vídeo: $e');
+      Get.snackbar(
+        'Erro',
+        'Erro ao salvar vídeo',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 }

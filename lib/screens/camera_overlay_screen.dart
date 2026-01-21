@@ -268,6 +268,15 @@ class CameraOverlayScreen extends StatelessWidget {
                                   controller.toggleScaleButton();
                                 },
                               ),
+
+                              _buildToolbarButton(
+                                label: 'Gravar',
+                                isActive:
+                                    controller.isRecordingButtonActive.value,
+                                onPressed: () {
+                                  controller.toggleRecordingButton();
+                                },
+                              ),
                             ],
                           ),
                         ),
@@ -669,7 +678,10 @@ class CameraOverlayScreen extends StatelessWidget {
           Obx(
             () => controller.areControlsVisible.value
                 ? Visibility(
-                    visible: controller.isFlashBarExpanded.value,
+                    visible:
+                        controller.isFlashBarExpanded.value &&
+                        !controller.isAngleBarExpanded.value &&
+                        !controller.isRecordingBarExpanded.value,
                     child: Positioned(
                       top: 90, // 50 (barra principal) + 40 (barra secundária)
                       left: 0,
@@ -731,10 +743,12 @@ class CameraOverlayScreen extends StatelessWidget {
           Obx(
             () => controller.areControlsVisible.value
                 ? Visibility(
-                    visible: controller.isAngleBarExpanded.value,
+                    visible:
+                        controller.isAngleBarExpanded.value &&
+                        !controller.isFlashBarExpanded.value &&
+                        !controller.isRecordingBarExpanded.value,
                     child: Positioned(
-                      top:
-                          90, // 50 (barra principal) + 40 (barra secundária) + 40 (barra piscar)
+                      top: 90, // 50 (barra principal) + 40 (barra secundária)
                       left: 0,
                       right: 0,
                       child: SafeArea(
@@ -842,14 +856,17 @@ class CameraOverlayScreen extends StatelessWidget {
                 : Container(),
           ),
 
-          // Barra do botão Escala - aparece abaixo da barra de ângulo
+          // Barra do botão Escala - aparece na mesma altura das outras barras de controle
           Obx(
             () => controller.areControlsVisible.value
                 ? Visibility(
-                    visible: controller.isScaleBarExpanded.value,
+                    visible:
+                        controller.isScaleBarExpanded.value &&
+                        !controller.isFlashBarExpanded.value &&
+                        !controller.isAngleBarExpanded.value &&
+                        !controller.isRecordingBarExpanded.value,
                     child: Positioned(
-                      top:
-                          90, // 50 (barra principal) + 40 (barra secundária) + 40 (barra piscar) + 40 (barra ângulo) + 40 (barra escala)
+                      top: 90, // 50 (barra principal) + 40 (barra secundária)
                       left: 0,
                       right: 0,
                       child: SafeArea(
@@ -937,6 +954,75 @@ class CameraOverlayScreen extends StatelessWidget {
                                       color: Colors.green,
                                       size: 32,
                                     ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(),
+          ),
+
+          // Barra do botão Gravação - aparece na mesma altura de Ângulo e Piscar
+          Obx(
+            () => controller.areControlsVisible.value
+                ? Visibility(
+                    visible:
+                        controller.isRecordingBarExpanded.value &&
+                        !controller.isFlashBarExpanded.value &&
+                        !controller.isAngleBarExpanded.value,
+                    child: Positioned(
+                      top: 90, // 50 (barra principal) + 40 (barra secundária)
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Texto de duração
+                                Obx(
+                                  () => Text(
+                                    controller.recordingDurationDisplay.value,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: controller.isRecording.value
+                                          ? Colors.red
+                                          : Colors.grey,
+                                    ),
+                                  ),
+                                ),
+
+                                // Switch para ligar/desligar gravação
+                                Obx(
+                                  () => Switch(
+                                    value: controller.isRecording.value,
+                                    onChanged: (value) async {
+                                      if (value) {
+                                        await controller.startVideoRecording();
+                                      } else {
+                                        await controller.stopVideoRecording();
+                                      }
+                                    },
+                                    activeColor: Colors.red,
                                   ),
                                 ),
                               ],
