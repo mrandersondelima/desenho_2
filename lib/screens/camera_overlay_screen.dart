@@ -495,6 +495,39 @@ class CameraOverlayScreen extends StatelessWidget {
                                                                 ],
                                                               ),
                                                             ),
+                                                          // Botão de deletar (parte de baixo)
+                                                          if (isSelected)
+                                                            Positioned(
+                                                              bottom: 0,
+                                                              right: 0,
+                                                              child: GestureDetector(
+                                                                onTap: () =>
+                                                                    _showDeleteConfirmationDialog(
+                                                                      context,
+                                                                      index,
+                                                                    ),
+                                                                child: Container(
+                                                                  width: 20,
+                                                                  height: 20,
+                                                                  decoration: BoxDecoration(
+                                                                    color: Colors
+                                                                        .red
+                                                                        .withValues(
+                                                                          alpha:
+                                                                              0.8,
+                                                                        ),
+                                                                    shape: BoxShape
+                                                                        .circle,
+                                                                  ),
+                                                                  child: const Icon(
+                                                                    Icons.close,
+                                                                    size: 12,
+                                                                    color: Colors
+                                                                        .white,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
                                                         ],
                                                       ),
                                                     ),
@@ -1224,6 +1257,31 @@ class CameraOverlayScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, int imageIndex) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar exclusão'),
+          content: const Text('Deseja realmente excluir esta imagem?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                controller.deleteImage(imageIndex);
+              },
+              child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

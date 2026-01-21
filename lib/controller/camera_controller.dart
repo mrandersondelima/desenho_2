@@ -665,6 +665,22 @@ class CameraOverlayController extends GetxController {
     }
   }
 
+  // Deleta uma imagem da lista
+  void deleteImage(int index) {
+    if (index >= 0 && index < overlayImages.length) {
+      overlayImages.removeAt(index);
+
+      // Atualiza o índice atual se necessário
+      if (overlayImages.isEmpty) {
+        currentImageIndex.value = 0;
+      } else if (currentImageIndex.value >= overlayImages.length) {
+        currentImageIndex.value = overlayImages.length - 1;
+      }
+
+      _autoSave();
+    }
+  }
+
   // Edita o título de uma imagem
   Future<void> editImageTitle(int index) async {
     if (index >= 0 && index < overlayImages.length) {
