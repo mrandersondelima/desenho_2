@@ -1271,7 +1271,7 @@ class CameraOverlayController extends GetxController {
 
   // Controles de rotação para aumentar/diminuir o ângulo da imagem
   Timer? _rotationTimer;
-  static const double _rotationSpeed = 0.01; // 1 grau por frame
+  static const double _rotationSpeed = 0.001; // 1 grau por frame
   static const Duration _rotationInterval = Duration(
     milliseconds: 16,
   ); // ~60fps
