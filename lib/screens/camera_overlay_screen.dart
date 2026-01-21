@@ -439,8 +439,9 @@ class CameraOverlayScreen extends StatelessWidget {
                                                                         height:
                                                                             20,
                                                                         decoration: BoxDecoration(
-                                                                          color: Colors.blue.withOpacity(
-                                                                            0.8,
+                                                                          color: Colors.blue.withValues(
+                                                                            alpha:
+                                                                                0.8,
                                                                           ),
                                                                           shape:
                                                                               BoxShape.circle,
@@ -474,8 +475,9 @@ class CameraOverlayScreen extends StatelessWidget {
                                                                         height:
                                                                             20,
                                                                         decoration: BoxDecoration(
-                                                                          color: Colors.blue.withOpacity(
-                                                                            0.8,
+                                                                          color: Colors.blue.withValues(
+                                                                            alpha:
+                                                                                0.8,
                                                                           ),
                                                                           shape:
                                                                               BoxShape.circle,
@@ -618,7 +620,8 @@ class CameraOverlayScreen extends StatelessWidget {
                               controller.toggleOverlayVisibility(value);
                               controller.isOpacitySwitchEnabled.value = value;
                             },
-                            activeColor: Colors.blue,
+                            activeTrackColor: Colors.blue,
+                            activeThumbColor: Colors.white,
                           ),
                         ],
                       ),
@@ -674,7 +677,8 @@ class CameraOverlayScreen extends StatelessWidget {
                                         ? (value) => controller
                                               .toggleAutoTransparency()
                                         : null,
-                                    activeColor: Colors.blue,
+                                    activeTrackColor: Colors.blue,
+                                    activeThumbColor: Colors.white,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -731,7 +735,9 @@ class CameraOverlayScreen extends StatelessWidget {
                                     width: 60,
                                     height: 60,
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.withOpacity(0.1),
+                                      color: Colors.orange.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.orange,
@@ -779,7 +785,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                     width: 60,
                                     height: 60,
                                     decoration: BoxDecoration(
-                                      color: Colors.blue.withOpacity(0.1),
+                                      color: Colors.blue.withValues(alpha: 0.1),
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.blue,
@@ -843,7 +849,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                     width: 60,
                                     height: 60,
                                     decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.1),
+                                      color: Colors.red.withValues(alpha: 0.1),
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.red,
@@ -884,7 +890,9 @@ class CameraOverlayScreen extends StatelessWidget {
                                     width: 60,
                                     height: 60,
                                     decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.1),
+                                      color: Colors.green.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.green,
@@ -921,11 +929,11 @@ class CameraOverlayScreen extends StatelessWidget {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(60),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -946,7 +954,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.8),
+                                    color: Colors.blue.withValues(alpha: 0.8),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -970,7 +978,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.8),
+                                    color: Colors.blue.withValues(alpha: 0.8),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -994,7 +1002,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.8),
+                                    color: Colors.blue.withValues(alpha: 0.8),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -1018,7 +1026,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.8),
+                                    color: Colors.blue.withValues(alpha: 0.8),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -1037,7 +1045,7 @@ class CameraOverlayScreen extends StatelessWidget {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.3),
+                                  color: Colors.grey.withValues(alpha: 0.3),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -1064,7 +1072,7 @@ class CameraOverlayScreen extends StatelessWidget {
                     child: SafeArea(
                       child: Container(
                         height: 60,
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -1091,11 +1099,12 @@ class CameraOverlayScreen extends StatelessWidget {
                                   vertical: 10,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
-                                  controller.selectedImage?.title ?? 'Sem título',
+                                  controller.selectedImage?.title ??
+                                      'Sem título',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
