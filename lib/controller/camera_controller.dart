@@ -55,9 +55,13 @@ class CameraOverlayController extends GetxController {
       false.obs; // Barra do botão Visualização expandida
   RxBool isRecordingBarExpanded =
       false.obs; // Barra do botão Gravação expandida
+  RxBool isIlluminationBarExpanded =
+      false.obs; // Barra do botão Iluminação expandida
 
   // Estados dos botões da barra de ferramentas
   RxBool isFlashButtonActive = false.obs;
+  RxDouble flashIntensity = 0.0.obs; // Intensidade do flash (0.0 a 1.0)
+  RxBool isFlashOn = false.obs; // Estado do flash (ligado/desligado)
   RxBool isIlluminationButtonActive = false.obs;
   RxBool isAngleButtonActive = false.obs;
   RxBool isRecordingButtonActive = false.obs;
@@ -330,6 +334,8 @@ class CameraOverlayController extends GetxController {
       isAngleBarExpanded.value = false;
       isRecordingBarExpanded.value = false;
       isScaleBarExpanded.value = false;
+      isIlluminationBarExpanded.value = false;
+      isVisibilityBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
@@ -340,12 +346,28 @@ class CameraOverlayController extends GetxController {
     isFlashButtonActive.value = false;
     isAngleButtonActive.value = false;
     isScaleButtonActive.value = false;
+    isRecordingButtonActive.value = false;
     isVisibilityButtonActive.value = false;
     // Alterna o estado do botão Iluminação
     isIlluminationButtonActive.value = !isIlluminationButtonActive.value;
+
+    // Controla a expansão da barra do botão Iluminação
+    isIlluminationBarExpanded.value = isIlluminationButtonActive.value;
+
+    // Se estiver ativando, fecha outras barras na mesma altura
+    if (isIlluminationButtonActive.value) {
+      isFlashBarExpanded.value = false;
+      isAngleBarExpanded.value = false;
+      isRecordingBarExpanded.value = false;
+      isScaleBarExpanded.value = false;
+      isVisibilityBarExpanded.value = false;
+    }
   }
 
   void toggleAngleButton() {
+    // Só permite ativar se "Mover Imagem" estiver ativo
+    if (!isImageMoveButtonActive.value) return;
+
     // Desativa os outros botões da barra de ferramentas
     isFlashButtonActive.value = false;
     isIlluminationButtonActive.value = false;
@@ -363,6 +385,7 @@ class CameraOverlayController extends GetxController {
       isFlashBarExpanded.value = false;
       isRecordingBarExpanded.value = false;
       isScaleBarExpanded.value = false;
+      isIlluminationBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
   }
@@ -388,6 +411,7 @@ class CameraOverlayController extends GetxController {
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
       isRecordingBarExpanded.value = false;
+      isIlluminationBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
     }
   }
@@ -409,6 +433,7 @@ class CameraOverlayController extends GetxController {
     if (isRecordingButtonActive.value) {
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
+      isIlluminationBarExpanded.value = false;
       isVisibilityBarExpanded.value = false;
       isScaleBarExpanded.value = false;
     }
@@ -420,6 +445,7 @@ class CameraOverlayController extends GetxController {
     isIlluminationButtonActive.value = false;
     isAngleButtonActive.value = false;
     isScaleButtonActive.value = false;
+    isRecordingButtonActive.value = false;
     // Alterna o estado do botão Visualização
     isVisibilityButtonActive.value = !isVisibilityButtonActive.value;
 
@@ -432,6 +458,8 @@ class CameraOverlayController extends GetxController {
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
       isScaleBarExpanded.value = false;
+      isRecordingBarExpanded.value = false;
+      isIlluminationBarExpanded.value = false;
     }
   }
 
@@ -1785,6 +1813,58 @@ class CameraOverlayController extends GetxController {
     }
 
     _autoSave();
+  }
+
+  // Atualiza a intensidade do flash
+  Future<void> setFlashIntensity(double intensity) async {
+    if (cameraController.value == null || !isCameraInitialized.value) {
+      return;
+    }
+
+    try {
+      flashIntensity.value = intensity;
+
+      if (intensity == 0.0) {
+        // Flash desligado
+        await cameraController.value!.setFlashMode(FlashMode.off);
+      } else if (intensity < 0.5) {
+        // Flash em modo torch (lantterna) com intensidade baixa
+        await cameraController.value!.setFlashMode(FlashMode.torch);
+      } else if (intensity < 0.8) {
+        // Flash em modo torch com intensidade média
+        await cameraController.value!.setFlashMode(FlashMode.torch);
+      } else {
+        // Flash no máximo (modo auto com potência máxima)
+        await cameraController.value!.setFlashMode(FlashMode.torch);
+      }
+
+      print('✓ Flash ajustado para: ${(intensity * 100).toStringAsFixed(0)}%');
+    } catch (e) {
+      print('✗ Erro ao ajustar flash: $e');
+    }
+  }
+
+  // Método simples para ligar/desligar flash (on/off)
+  Future<void> toggleFlash(bool isOn) async {
+    if (cameraController.value == null || !isCameraInitialized.value) {
+      return;
+    }
+
+    try {
+      isFlashOn.value = isOn;
+
+      if (isOn) {
+        // Flash ligado - modo torch
+        await cameraController.value!.setFlashMode(FlashMode.torch);
+        print('✓ Flash ligado');
+      } else {
+        // Flash desligado
+        await cameraController.value!.setFlashMode(FlashMode.off);
+        print('✓ Flash desligado');
+      }
+    } catch (e) {
+      print('✗ Erro ao controlar flash: $e');
+    }
   }
 
   // Inicia a gravação de vídeo

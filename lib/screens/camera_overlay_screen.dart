@@ -674,6 +674,63 @@ class CameraOverlayScreen extends StatelessWidget {
             ),
           ),
 
+          // Barra do botão Iluminação (Flash) - aparece na mesma altura das outras barras
+          Obx(
+            () => controller.areControlsVisible.value
+                ? Visibility(
+                    visible:
+                        controller.isIlluminationBarExpanded.value &&
+                        !controller.isFlashBarExpanded.value &&
+                        !controller.isAngleBarExpanded.value &&
+                        !controller.isRecordingBarExpanded.value &&
+                        !controller.isScaleBarExpanded.value,
+                    child: Positioned(
+                      top: 90, // 50 (barra principal) + 40 (barra secundária)
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 4),
+
+                                // Switch para ligar/desligar flash
+                                Obx(
+                                  () => Switch.adaptive(
+                                    value: controller.isFlashOn.value,
+                                    onChanged: (value) async {
+                                      await controller.toggleFlash(value);
+                                    },
+                                    activeThumbColor: Colors.blue,
+                                    activeTrackColor: Colors.blue.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(),
+          ),
+
           // Barra do botão Piscar deslizante (auto transparência) - aparece abaixo da barra de ferramentas
           Obx(
             () => controller.areControlsVisible.value
@@ -681,7 +738,9 @@ class CameraOverlayScreen extends StatelessWidget {
                     visible:
                         controller.isFlashBarExpanded.value &&
                         !controller.isAngleBarExpanded.value &&
-                        !controller.isRecordingBarExpanded.value,
+                        !controller.isRecordingBarExpanded.value &&
+                        !controller.isIlluminationBarExpanded.value &&
+                        !controller.isScaleBarExpanded.value,
                     child: Positioned(
                       top: 90, // 50 (barra principal) + 40 (barra secundária)
                       left: 0,
@@ -705,6 +764,7 @@ class CameraOverlayScreen extends StatelessWidget {
                             child: Row(
                               children: [
                                 // Só mostra o switch se estiver no modo desenho
+                                SizedBox(width: 10),
                                 Obx(
                                   () => Switch.adaptive(
                                     value:
@@ -746,7 +806,9 @@ class CameraOverlayScreen extends StatelessWidget {
                     visible:
                         controller.isAngleBarExpanded.value &&
                         !controller.isFlashBarExpanded.value &&
-                        !controller.isRecordingBarExpanded.value,
+                        !controller.isRecordingBarExpanded.value &&
+                        !controller.isIlluminationBarExpanded.value &&
+                        !controller.isScaleBarExpanded.value,
                     child: Positioned(
                       top: 90, // 50 (barra principal) + 40 (barra secundária)
                       left: 0,
@@ -864,7 +926,8 @@ class CameraOverlayScreen extends StatelessWidget {
                         controller.isScaleBarExpanded.value &&
                         !controller.isFlashBarExpanded.value &&
                         !controller.isAngleBarExpanded.value &&
-                        !controller.isRecordingBarExpanded.value,
+                        !controller.isRecordingBarExpanded.value &&
+                        !controller.isIlluminationBarExpanded.value,
                     child: Positioned(
                       top: 90, // 50 (barra principal) + 40 (barra secundária)
                       left: 0,
@@ -973,7 +1036,9 @@ class CameraOverlayScreen extends StatelessWidget {
                     visible:
                         controller.isRecordingBarExpanded.value &&
                         !controller.isFlashBarExpanded.value &&
-                        !controller.isAngleBarExpanded.value,
+                        !controller.isAngleBarExpanded.value &&
+                        !controller.isIlluminationBarExpanded.value &&
+                        !controller.isScaleBarExpanded.value,
                     child: Positioned(
                       top: 90, // 50 (barra principal) + 40 (barra secundária)
                       left: 0,
