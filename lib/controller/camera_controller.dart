@@ -1024,10 +1024,13 @@ class CameraOverlayController extends GetxController {
 
     focalPoint.value = currentFocalPoint;
 
-    // Debug: print focalPoint information
-    print('focalPoint: ${details.focalPoint}');
-    print('localFocalPoint: ${details.localFocalPoint}');
-    print('focalPointDelta: ${details.focalPointDelta}');
+    // Transform.scale (usado na renderização da câmera e da imagem) escala em
+    // torno do centro da tela por padrão, então o ponto focal precisa ser
+    // relativo a esse centro para o pinça-zoom partir exatamente de onde os
+    // dedos tocaram, e não do canto superior esquerdo da tela.
+    final screenCenter = Offset(Get.width / 2, Get.height / 2);
+    final focalX = _startFocalPoint.dx - screenCenter.dx;
+    final focalY = _startFocalPoint.dy - screenCenter.dy;
 
     if (isDrawingMode) {
       // MODO DESENHO: Move câmera e imagem juntos
@@ -1040,24 +1043,16 @@ class CameraOverlayController extends GetxController {
       // Fórmula: novaPos = pontoFocal - (pontoFocal - posInicial) * (novaEscala / escalaInicial)
       final cameraScaleRatio = newCameraScale / _initialCameraScale;
       cameraPositionX.value =
-          _startFocalPoint.dx -
-          (_startFocalPoint.dx - _initialCameraX) * cameraScaleRatio +
-          dx;
+          focalX - (focalX - _initialCameraX) * cameraScaleRatio + dx;
       cameraPositionY.value =
-          _startFocalPoint.dy -
-          (_startFocalPoint.dy - _initialCameraY) * cameraScaleRatio +
-          dy;
+          focalY - (focalY - _initialCameraY) * cameraScaleRatio + dy;
 
       // Calcula nova posição da imagem mantendo o ponto focal fixo
       final imageScaleRatio = newImageScale / _initialImageScale;
       imagePositionX.value =
-          _startFocalPoint.dx -
-          (_startFocalPoint.dx - _initialImageX) * imageScaleRatio +
-          dx;
+          focalX - (focalX - _initialImageX) * imageScaleRatio + dx;
       imagePositionY.value =
-          _startFocalPoint.dy -
-          (_startFocalPoint.dy - _initialImageY) * imageScaleRatio +
-          dy;
+          focalY - (focalY - _initialImageY) * imageScaleRatio + dy;
 
       cameraScale.value = newCameraScale;
       imageScale.value = newImageScale;
@@ -1069,13 +1064,9 @@ class CameraOverlayController extends GetxController {
       // Calcula nova posição da imagem mantendo o ponto focal fixo
       final imageScaleRatio = newImageScale / _initialImageScale;
       imagePositionX.value =
-          _startFocalPoint.dx -
-          (_startFocalPoint.dx - _initialImageX) * imageScaleRatio +
-          dx;
+          focalX - (focalX - _initialImageX) * imageScaleRatio + dx;
       imagePositionY.value =
-          _startFocalPoint.dy -
-          (_startFocalPoint.dy - _initialImageY) * imageScaleRatio +
-          dy;
+          focalY - (focalY - _initialImageY) * imageScaleRatio + dy;
 
       // Rotação
       final newRotation = rotationChange + _initialImageRotation;
@@ -1093,13 +1084,9 @@ class CameraOverlayController extends GetxController {
       // Calcula nova posição da câmera mantendo o ponto focal fixo
       final cameraScaleRatio = newCameraScale / _initialCameraScale;
       cameraPositionX.value =
-          _startFocalPoint.dx -
-          (_startFocalPoint.dx - _initialCameraX) * cameraScaleRatio +
-          dx;
+          focalX - (focalX - _initialCameraX) * cameraScaleRatio + dx;
       cameraPositionY.value =
-          _startFocalPoint.dy -
-          (_startFocalPoint.dy - _initialCameraY) * cameraScaleRatio +
-          dy;
+          focalY - (focalY - _initialCameraY) * cameraScaleRatio + dy;
 
       cameraScale.value = newCameraScale;
     }
