@@ -49,6 +49,8 @@ class CameraOverlayController extends GetxController {
   RxBool isOpacitySwitchEnabled = true.obs; // Switch para controlar opacidade
   RxBool isToolsBarExpanded = false.obs; // Barra de ferramentas expandida
   RxBool isFlashBarExpanded = false.obs; // Barra do botão Piscar expandida
+  RxBool isIlluminationBarExpanded =
+      false.obs; // Barra do botão Iluminação expandida
   RxBool isAngleBarExpanded = false.obs; // Barra do botão Ângulo expandida
   RxBool isScaleBarExpanded = false.obs; // Barra do botão Escala expandida
   RxBool isVisibilityBarExpanded =
@@ -63,6 +65,10 @@ class CameraOverlayController extends GetxController {
   RxDouble flashIntensity = 0.0.obs; // Intensidade do flash (0.0 a 1.0)
   RxBool isFlashOn = false.obs; // Estado do flash (ligado/desligado)
   RxBool isIlluminationButtonActive = false.obs;
+
+  // Controle do flash do celular (lanterna)
+  RxBool isFlashLightOn = false.obs;
+
   RxBool isAngleButtonActive = false.obs;
   RxBool isRecordingButtonActive = false.obs;
   RxBool isScaleButtonActive = false.obs;
@@ -331,6 +337,7 @@ class CameraOverlayController extends GetxController {
 
     // Se estiver ativando, fecha outras barras na mesma altura
     if (isFlashButtonActive.value) {
+      isIlluminationBarExpanded.value = false;
       isAngleBarExpanded.value = false;
       isRecordingBarExpanded.value = false;
       isScaleBarExpanded.value = false;
@@ -364,6 +371,21 @@ class CameraOverlayController extends GetxController {
     }
   }
 
+  // Liga ou desliga o flash do celular (lanterna)
+  void toggleFlashLight(bool value) async {
+    isFlashLightOn.value = value;
+    if (cameraController.value != null && isCameraInitialized.value) {
+      try {
+        await cameraController.value!.setFlashMode(
+          value ? FlashMode.torch : FlashMode.off,
+        );
+      } catch (e) {
+        print('Erro ao controlar flash: $e');
+        Get.snackbar('Erro', 'Não foi possível controlar o flash');
+      }
+    }
+  }
+
   void toggleAngleButton() {
     // Só permite ativar se "Mover Imagem" estiver ativo
     if (!isImageMoveButtonActive.value) return;
@@ -382,6 +404,7 @@ class CameraOverlayController extends GetxController {
 
     // Se estiver ativando, fecha outras barras na mesma altura
     if (isAngleButtonActive.value) {
+      isIlluminationBarExpanded.value = false;
       isFlashBarExpanded.value = false;
       isRecordingBarExpanded.value = false;
       isScaleBarExpanded.value = false;
@@ -455,6 +478,7 @@ class CameraOverlayController extends GetxController {
     // Se estiver ativando, fecha outras barras
     if (isVisibilityButtonActive.value) {
       isMoveBarExpanded.value = false;
+      isIlluminationBarExpanded.value = false;
       isFlashBarExpanded.value = false;
       isAngleBarExpanded.value = false;
       isScaleBarExpanded.value = false;
