@@ -799,6 +799,49 @@ class CameraOverlayScreen extends StatelessWidget {
                 : Container(),
           ),
 
+          // Barra do botão Iluminação - controla o flash (lanterna)
+          Obx(
+            () => controller.areControlsVisible.value
+                ? Visibility(
+                    visible: controller.isIlluminationBarExpanded.value,
+                    child: Positioned(
+                      top: 90, // 50 (barra principal) + 40 (barra secundária)
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Switch(
+                                  value: controller.isFlashLightOn.value,
+                                  onChanged: controller.toggleFlashLight,
+                                  activeColor: Colors.orange,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(),
+          ),
+
           // Barra do botão Ângulo - aparece abaixo da barra de ferramentas
           Obx(
             () => controller.areControlsVisible.value
