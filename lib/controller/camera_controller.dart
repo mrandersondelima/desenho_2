@@ -1811,8 +1811,9 @@ class CameraOverlayController extends GetxController {
 
   // Valida se uma nova imagem é compatível com as existentes
   Future<bool> _validateImageCompatibility(String newImagePath) async {
-    if (overlayImagePaths.isEmpty)
+    if (overlayImagePaths.isEmpty) {
       return true; // Primeira imagem sempre é válida
+    }
 
     final newImageSize = await _getImageDimensions(newImagePath);
     if (newImageSize == null) return false;
