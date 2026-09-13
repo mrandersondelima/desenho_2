@@ -57,8 +57,6 @@ class CameraOverlayController extends GetxController {
       false.obs; // Barra do botão Visualização expandida
   RxBool isRecordingBarExpanded =
       false.obs; // Barra do botão Gravação expandida
-  RxBool isIlluminationBarExpanded =
-      false.obs; // Barra do botão Iluminação expandida
 
   // Estados dos botões da barra de ferramentas
   RxBool isFlashButtonActive = false.obs;
