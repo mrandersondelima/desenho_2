@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/project.dart';
@@ -1938,18 +1939,6 @@ class CameraOverlayController extends GetxController {
         return;
       }
 
-      // Verifica permissão de armazenamento (necessária para salvar na galeria)
-      if (Platform.isAndroid) {
-        final storageStatus = await Permission.storage.request();
-        if (!storageStatus.isGranted) {
-          // Tenta permissão de mídia (Android 13+)
-          final mediaStatus = await Permission.photos.request();
-          if (!mediaStatus.isGranted) {
-            print('Aviso: Permissão de armazenamento não concedida');
-          }
-        }
-      }
-
       // Inicia a gravação
       await cameraController.value!.startVideoRecording();
       isRecording.value = true;
@@ -1992,87 +1981,58 @@ class CameraOverlayController extends GetxController {
           .stopVideoRecording();
       isRecording.value = false;
 
-      // Salva o vídeo na galeria do celular
+      // Salva o vídeo na galeria do celular (a própria função exibe o
+      // resultado, sucesso ou erro, então nada é exibido incondicionalmente aqui)
       await _saveVideoToGallery(videoFile.path);
-
-      Get.snackbar(
-        'Sucesso',
-        'Vídeo salvo na galeria',
-        snackPosition: SnackPosition.BOTTOM,
-      );
     } catch (e) {
       Get.snackbar('Erro', 'Erro ao parar gravação: $e');
       isRecording.value = false;
     }
   }
 
-  // Salva o vídeo na galeria do celular
+  // Salva o vídeo na galeria do celular usando a API de mídia do sistema
+  // (escrita direta em /storage/emulated/0/DCIM não funciona no Android 10+
+  // por causa do scoped storage, então usamos o pacote `gal`)
   Future<void> _saveVideoToGallery(String videoPath) async {
+    final File videoFile = File(videoPath);
+
+    if (!videoFile.existsSync()) {
+      Get.snackbar('Erro', 'Vídeo não encontrado');
+      return;
+    }
+
     try {
-      final File videoFile = File(videoPath);
-
-      // Verifica se o arquivo existe
-      if (!videoFile.existsSync()) {
-        print('✗ Arquivo de vídeo não encontrado: $videoPath');
-        Get.snackbar('Erro', 'Vídeo não encontrado');
-        return;
-      }
-
-      if (Platform.isAndroid) {
-        try {
-          // Obtém o diretório público DCIM/Camera
-          final String fileName =
-              'VIDEO_${DateTime.now().millisecondsSinceEpoch}.mp4';
-          final String dcimPath = '/storage/emulated/0/DCIM/Camera/$fileName';
-          final File destFile = File(dcimPath);
-
-          // Copia o arquivo para DCIM/Camera
-          await videoFile.copy(destFile.path);
-
-          print('✓ Vídeo salvo em: ${destFile.path}');
-          Get.snackbar(
-            'Sucesso',
-            'Vídeo salvo na galeria',
-            snackPosition: SnackPosition.BOTTOM,
-            duration: const Duration(seconds: 2),
-          );
-        } catch (e) {
-          print('✗ Erro ao salvar vídeo: $e');
+      final hasAccess = await Gal.hasAccess(toAlbum: true);
+      if (!hasAccess) {
+        final granted = await Gal.requestAccess(toAlbum: true);
+        if (!granted) {
           Get.snackbar(
             'Erro',
-            'Erro ao salvar vídeo: $e',
+            'Permissão de galeria negada',
             snackPosition: SnackPosition.BOTTOM,
           );
-        }
-      } else if (Platform.isIOS) {
-        try {
-          // No iOS, copia para Documents (que aparece na Fotos)
-          final appDir = await Directory.systemTemp.create(recursive: true);
-          final fileName = 'VIDEO_${DateTime.now().millisecondsSinceEpoch}.mp4';
-          final copyPath = '${appDir.path}/$fileName';
-          await videoFile.copy(copyPath);
-
-          print('✓ Vídeo salvo em: $copyPath');
-          Get.snackbar(
-            'Sucesso',
-            'Vídeo pronto para salvar',
-            snackPosition: SnackPosition.BOTTOM,
-            duration: const Duration(seconds: 2),
-          );
-        } catch (e) {
-          print('✗ Erro ao salvar vídeo: $e');
-          Get.snackbar(
-            'Erro',
-            'Erro ao salvar vídeo: $e',
-            snackPosition: SnackPosition.BOTTOM,
-          );
+          return;
         }
       }
-    } catch (e) {
-      print('✗ Erro geral ao salvar vídeo: $e');
+
+      await Gal.putVideo(videoPath, album: 'Desenho 2');
+
+      Get.snackbar(
+        'Sucesso',
+        'Vídeo salvo na galeria',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+    } on GalException catch (e) {
       Get.snackbar(
         'Erro',
-        'Erro ao salvar vídeo',
+        'Erro ao salvar vídeo: ${e.type.message}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Erro',
+        'Erro ao salvar vídeo: $e',
         snackPosition: SnackPosition.BOTTOM,
       );
     }
