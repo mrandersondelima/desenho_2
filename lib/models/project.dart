@@ -50,6 +50,9 @@ class Project {
   final double cameraPositionY;
   final double cameraScale;
 
+  // Tempo total trabalhado no projeto (controles escondidos = desenhando)
+  final int totalWorkedMilliseconds;
+
   const Project({
     required this.id,
     required this.name,
@@ -66,6 +69,7 @@ class Project {
     this.cameraPositionX = 0.0,
     this.cameraPositionY = 0.0,
     this.cameraScale = 1.0,
+    this.totalWorkedMilliseconds = 0,
   });
 
   // Construtor para criar um novo projeto
@@ -101,6 +105,7 @@ class Project {
     double? cameraPositionX,
     double? cameraPositionY,
     double? cameraScale,
+    int? totalWorkedMilliseconds,
   }) {
     return Project(
       id: id ?? this.id,
@@ -118,6 +123,8 @@ class Project {
       cameraPositionX: cameraPositionX ?? this.cameraPositionX,
       cameraPositionY: cameraPositionY ?? this.cameraPositionY,
       cameraScale: cameraScale ?? this.cameraScale,
+      totalWorkedMilliseconds:
+          totalWorkedMilliseconds ?? this.totalWorkedMilliseconds,
     );
   }
 
@@ -139,6 +146,7 @@ class Project {
       'cameraPositionX': cameraPositionX,
       'cameraPositionY': cameraPositionY,
       'cameraScale': cameraScale,
+      'totalWorkedMilliseconds': totalWorkedMilliseconds,
     };
   }
 
@@ -168,6 +176,7 @@ class Project {
       cameraPositionX: (map['cameraPositionX'] ?? 0.0).toDouble(),
       cameraPositionY: (map['cameraPositionY'] ?? 0.0).toDouble(),
       cameraScale: (map['cameraScale'] ?? 1.0).toDouble(),
+      totalWorkedMilliseconds: (map['totalWorkedMilliseconds'] ?? 0).toInt(),
     );
   }
 
@@ -180,7 +189,7 @@ class Project {
 
   @override
   String toString() {
-    return 'Project(id: $id, name: $name, createdAt: $createdAt, lastModified: $lastModified, overlayImages: $overlayImages, currentImageIndex: $currentImageIndex, imageOpacity: $imageOpacity, imagePositionX: $imagePositionX, imagePositionY: $imagePositionY, imageScale: $imageScale, imageRotation: $imageRotation, showOverlayImage: $showOverlayImage, cameraPositionX: $cameraPositionX, cameraPositionY: $cameraPositionY, cameraScale: $cameraScale)';
+    return 'Project(id: $id, name: $name, createdAt: $createdAt, lastModified: $lastModified, overlayImages: $overlayImages, currentImageIndex: $currentImageIndex, imageOpacity: $imageOpacity, imagePositionX: $imagePositionX, imagePositionY: $imagePositionY, imageScale: $imageScale, imageRotation: $imageRotation, showOverlayImage: $showOverlayImage, cameraPositionX: $cameraPositionX, cameraPositionY: $cameraPositionY, cameraScale: $cameraScale, totalWorkedMilliseconds: $totalWorkedMilliseconds)';
   }
 
   @override
@@ -202,7 +211,8 @@ class Project {
         other.showOverlayImage == showOverlayImage &&
         other.cameraPositionX == cameraPositionX &&
         other.cameraPositionY == cameraPositionY &&
-        other.cameraScale == cameraScale;
+        other.cameraScale == cameraScale &&
+        other.totalWorkedMilliseconds == totalWorkedMilliseconds;
   }
 
   // Helper function para comparar listas
@@ -231,7 +241,8 @@ class Project {
         showOverlayImage.hashCode ^
         cameraPositionX.hashCode ^
         cameraPositionY.hashCode ^
-        cameraScale.hashCode;
+        cameraScale.hashCode ^
+        totalWorkedMilliseconds.hashCode;
   }
 
   // Getters de conveniência
@@ -257,5 +268,25 @@ class Project {
 
   String get formattedLastModified {
     return '${lastModified.day.toString().padLeft(2, '0')}/${lastModified.month.toString().padLeft(2, '0')}/${lastModified.year}';
+  }
+
+  Duration get totalWorkedTime =>
+      Duration(milliseconds: totalWorkedMilliseconds);
+
+  String get formattedTotalWorkedTime {
+    final duration = totalWorkedTime;
+    final days = duration.inDays;
+    final hours = duration.inHours.remainder(24);
+    final minutes = duration.inMinutes.remainder(60);
+
+    final parts = <String>[];
+    if (days > 0) parts.add('$days ${days == 1 ? 'dia' : 'dias'}');
+    if (hours > 0) parts.add('$hours ${hours == 1 ? 'hora' : 'horas'}');
+    if (minutes > 0 || parts.isEmpty) {
+      parts.add('$minutes ${minutes == 1 ? 'minuto' : 'minutos'}');
+    }
+
+    if (parts.length == 1) return parts.first;
+    return '${parts.sublist(0, parts.length - 1).join(', ')} e ${parts.last}';
   }
 }

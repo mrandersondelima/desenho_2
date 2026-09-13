@@ -208,7 +208,29 @@ class ProjectListScreen extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const Spacer(),
-                if (project.hasOverlayImage)
+                if (project.totalWorkedMilliseconds > 0)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 12,
+                        color: Colors.orange[700],
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          project.formattedTotalWorkedTime,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.orange[700],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  )
+                else if (project.hasOverlayImage)
                   Row(
                     children: [
                       Icon(Icons.image, size: 12, color: Colors.grey[500]),
@@ -254,6 +276,19 @@ class ProjectListScreen extends StatelessWidget {
               'Modificado em ${_formatDate(project.lastModified)}',
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
+            if (project.totalWorkedMilliseconds > 0) ...[
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Icon(Icons.timer_outlined, size: 13, color: Colors.orange[700]),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Tempo de trabalho: ${project.formattedTotalWorkedTime}',
+                    style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 4),
             Row(
               children: [

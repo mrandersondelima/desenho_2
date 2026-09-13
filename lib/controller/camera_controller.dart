@@ -129,6 +129,14 @@ class CameraOverlayController extends GetxController {
   Rx<Project?> currentProject = Rx<Project?>(null);
   final ProjectService _projectService = ProjectService();
 
+  // Tempo de trabalho: só conta enquanto areControlsVisible == false
+  final Stopwatch _workStopwatch = Stopwatch();
+  int _baseWorkedMilliseconds = 0;
+  Timer? _workPersistTimer;
+
+  int get _currentTotalWorkedMilliseconds =>
+      _baseWorkedMilliseconds + _workStopwatch.elapsedMilliseconds;
+
   // TextEditingController para input de rotação
   final TextEditingController rotationTextController = TextEditingController();
 
@@ -167,6 +175,8 @@ class CameraOverlayController extends GetxController {
     _maxTransparencyValue = imageOpacity.value;
     // Inicializa cameraScale
     cameraScale.value = 1.0;
+    // Contabiliza tempo de trabalho apenas enquanto os controles estão escondidos
+    ever(areControlsVisible, _handleControlsVisibilityChanged);
     initializeCamera();
   }
 
@@ -179,6 +189,8 @@ class CameraOverlayController extends GetxController {
     _moveTimer?.cancel();
     _scaleTimer?.cancel();
     _rotationTimer?.cancel();
+    _workPersistTimer?.cancel();
+    _workStopwatch.stop();
 
     cameraController.value?.dispose();
     rotationTextController.dispose();
@@ -189,6 +201,25 @@ class CameraOverlayController extends GetxController {
 
   void toggleVisibility() {
     areControlsVisible.value = !areControlsVisible.value;
+  }
+
+  // Inicia/pausa o cronômetro de tempo trabalhado no projeto
+  void _handleControlsVisibilityChanged(bool controlsVisible) {
+    if (controlsVisible) {
+      if (_workStopwatch.isRunning) {
+        _workStopwatch.stop();
+        _workPersistTimer?.cancel();
+        _workPersistTimer = null;
+        _autoSave();
+      }
+    } else {
+      if (!_workStopwatch.isRunning) {
+        _workStopwatch.start();
+        _workPersistTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+          _autoSave();
+        });
+      }
+    }
   }
 
   void toggleMoveButton() {
@@ -1157,6 +1188,20 @@ class CameraOverlayController extends GetxController {
     rotationTextController.text = projectToLoad.imageRotation
         .toInt()
         .toString();
+
+    // Reinicia o cronômetro de tempo trabalhado a partir do valor salvo do projeto
+    _workPersistTimer?.cancel();
+    _workPersistTimer = null;
+    _workStopwatch
+      ..stop()
+      ..reset();
+    _baseWorkedMilliseconds = projectToLoad.totalWorkedMilliseconds;
+    if (!areControlsVisible.value) {
+      _workStopwatch.start();
+      _workPersistTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+        _autoSave();
+      });
+    }
   }
 
   Future<void> saveCurrentProject() async {
@@ -1176,6 +1221,7 @@ class CameraOverlayController extends GetxController {
         cameraPositionX: cameraPositionX.value,
         cameraPositionY: cameraPositionY.value,
         cameraScale: cameraScale.value,
+        totalWorkedMilliseconds: _currentTotalWorkedMilliseconds,
         lastModified: DateTime.now(),
       );
 
